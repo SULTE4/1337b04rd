@@ -4,7 +4,6 @@ import (
 	"1337b04rd/internal/domain/post"
 	"fmt"
 	"log/slog"
-	"mime/multipart"
 	"net/http"
 	"text/template"
 )
@@ -13,13 +12,6 @@ type Handler struct {
 	postService *post.Service
 	// userService   *user.Service
 	templateCache map[string]*template.Template
-}
-
-type createPost struct {
-	Name    string
-	Subject string
-	Comment string
-	File    multipart.File
 }
 
 func NewHandler(postService *post.Service, templateCache map[string]*template.Template) *Handler {
@@ -53,7 +45,7 @@ func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var post createPost
+	var post post.CreatePostForm
 
 	post.Name = r.PostForm.Get("name")
 	post.Subject = r.PostForm.Get("subject")
@@ -65,8 +57,9 @@ func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 	}
 	post.File = file
 	fmt.Println(post)
-	// err = h.postService.CreatePost(post)
+	id, err := h.postService.CreatePost(post)
 	w.Write([]byte("Create page submission"))
+	http.Redirect(w, r, fmt.Sprintf("/post{%d}", id), http.StatusOK)
 
 }
 
@@ -75,9 +68,10 @@ func (h *Handler) ViewPost(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (h *Handler) Error(errId int, message string) http.Handler {
+func (h *Handler) Error(w http.ResponseWriter, r *http.Response, errId int, message string) {
 	data := h.NewTemplateData(r)
-
+	data.ErrID = errId
+	data.ErrMessage = "occured error"
 	h.render(w, r, http.StatusOK, "error.html", data)
 }
 
@@ -90,7 +84,7 @@ func (h *Handler) render(w http.ResponseWriter, r *http.Request, status int, pag
 	}
 	w.WriteHeader(status)
 
-	err := ts.Execute(w, nil)
+	err := ts.Execute(w, data)
 	if err != nil {
 		h.serverError(w, r, err)
 		return

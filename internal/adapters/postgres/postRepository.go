@@ -13,16 +13,16 @@ func NewPostRepo(db *sql.DB) *PostgresPostRepo {
 	return &PostgresPostRepo{db: db}
 }
 
-func (r *PostgresPostRepo) Insert(p post.Post) error {
+func (r *PostgresPostRepo) Insert(p post.Post) (int, error) {
 	stmt := `INSERT INTO Form (title, content, userID, created)
-			VALUES ($1, $2, $3, $4)`
-
-	_, err := r.db.Exec(stmt, p.Title, p.Content, p.UserID, p.Created)
+			VALUES ($1, $2, $3, $4) returning id`
+	id := 0
+	err := r.db.QueryRow(stmt, p.Title, p.Content, p.UserID, p.Created).Scan(&id)
 	if err != nil {
-		return err
+		return 0, err
 	}
 
-	return nil
+	return id, nil
 }
 
 func (r *PostgresPostRepo) GetByID(id int) (post.Post, error) {

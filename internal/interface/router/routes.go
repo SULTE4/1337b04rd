@@ -16,6 +16,6 @@ func NewRouter(handler *ihttp.Handler) http.Handler {
 	// router.HandleFunc("GET /error", handler.Error)
 
 	router.HandleFunc("POST /submit-post", handler.CreatePost)
-	router.HandleFunc("POST /post/{id}", handler.CommentPost)
+	// router.HandleFunc("POST /post/{id}", handler.CommentPost)
 	return router
 }
