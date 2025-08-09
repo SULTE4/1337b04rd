@@ -14,6 +14,13 @@ func NewPostRepo(db *sql.DB) *PostgresPostRepo {
 }
 
 func (r *PostgresPostRepo) Insert(p post.Post) error {
+	stmt := `INSERT INTO Form (title, content, userID, created)
+			VALUES ($1, $2, $3, $4)`
+
+	_, err := r.db.Exec(stmt, p.Title, p.Content, p.UserID, p.Created)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

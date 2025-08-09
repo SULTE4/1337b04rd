@@ -1,0 +1,48 @@
+services:
+  web:
+    build: .
+    ports:
+      - "80:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["python", "app.py"]
+ 
+  db:
+    image: postgres
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: pass
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+ 
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+
+
+  # minio:
+  #   container_name: minio
+  #   image: 'bitnami/minio:latest'
+  #   volumes:
+  #     - 'minio_data:/data'
+  #   ports:
+  #     - "9000:9000"
+  #   restart: unless-stopped
+  #   environment:
+  #     MINIO_ROOT_USER: "${MINIO_ROOT_USER}"
+  #     MINIO_ROOT_PASSWORD: "${MINIO_ROOT_PASSWORD}"
+  #     MINIO_USE_SSL: "${MINIO_USE_SSL}"
+  #     MINIO_DEFAULT_BUCKETS: "${MINIO_BUCKET_NAME}"
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+  #     interval: 30s
+  #     timeout: 20s
+  #     retries: 3
+  # volumes:
+  #   minio_data:

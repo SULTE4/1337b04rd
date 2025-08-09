@@ -1,0 +1,117 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+
+:root {
+    --bg-color: #f9fafa;
+    --text-color: #222;
+    --link-color: #0066cc;
+    --link-hover: #004a99;
+    --card-bg: #ffffff;
+    --border-color: #e5e7eb;
+    --radius: 10px;
+    --shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+header, footer {
+    background-color: var(--card-bg);
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--border-color);
+    box-shadow: var(--shadow);
+}
+
+header nav, footer nav {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+a {
+    color: var(--link-color);
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+a:hover {
+    color: var(--link-hover);
+}
+
+main {
+    max-width: 900px;
+    margin: 20px auto;
+    padding: 0 15px;
+}
+
+h1, h2, h3 {
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+p {
+    margin-bottom: 15px;
+}
+
+.container, .card {
+    background-color: var(--card-bg);
+    padding: 20px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+}
+
+button, input[type="submit"] {
+    background-color: var(--link-color);
+    color: white;
+    padding: 10px 18px;
+    border: none;
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+button:hover, input[type="submit"]:hover {
+    background-color: var(--link-hover);
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+input[type="text"], textarea {
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    font: inherit;
+    width: 100%;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+table th, table td {
+    padding: 10px;
+    border-bottom: 1px solid var(--border-color);
+    text-align: left;
+}
+
+@media (max-width: 600px) {
+    header nav, footer nav {
+        flex-direction: column;
+    }
+}

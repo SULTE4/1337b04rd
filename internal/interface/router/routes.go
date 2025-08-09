@@ -8,13 +8,14 @@ import (
 func NewRouter(handler *ihttp.Handler) http.Handler {
 	router := http.NewServeMux()
 
+	router.HandleFunc("GET /", handler.Catalog)
+	router.HandleFunc("GET /post/create", handler.Create)
+	router.HandleFunc("GET /post/{id}", handler.ViewPost)
+	router.HandleFunc("GET /archive/post", handler.Archive)
+	router.HandleFunc("GET /archive/view/post", handler.ViewPost)
+	// router.HandleFunc("GET /error", handler.Error)
 
-	router.HandleFunc("GET /", handler.home)
-	router.Handle("GET /post/create", )
-	router.Handle("POST /submit-post", )
-	router.Handle("GET /post/view",)
-	router.Handle("GET /archive/post",)
-	router.Handle("GET /archive/view/post" handler.)
-	router.Handle("GET /error", )
+	router.HandleFunc("POST /submit-post", handler.CreatePost)
+	router.HandleFunc("POST /post/{id}", handler.CommentPost)
 	return router
 }
