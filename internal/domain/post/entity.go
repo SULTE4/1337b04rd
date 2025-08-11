@@ -5,22 +5,23 @@ import (
 )
 
 type Post struct {
-	ID      int
-	Title   string
-	Content string
-	Image   string
-	UserID  int
-	Created time.Time
-	Expires time.Time
+	ID       int
+	Title    string
+	Content  string
+	ImageURL string
+	UserID   int
+	Created  time.Time
+	Expires  time.Time
 }
 
-func newPost(title, content, image string, id int) *Post {
+func newPost(title, content, imageURL string, id int) *Post {
+	t := time.Now().UTC()
 	return &Post{
-		Title:   title,
-		Content: content,
-		Image:   "-",
-		UserID:  id,
-		Created: time.Now().UTC(),
-		Expires: time.Now().UTC().Add(time.Minute * 10),
+		Title:    title,
+		Content:  content,
+		ImageURL: imageURL,
+		UserID:   id,
+		Created:  t,
+		Expires:  t.Add(time.Minute * 10),
 	}
 }

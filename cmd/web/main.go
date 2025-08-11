@@ -19,7 +19,8 @@ import (
 */
 
 func main() {
-	dsn := "postgres://user:pass@localhost:5432/mydb?sslmode=disable"
+	dsn := os.Getenv("DB_DSN")
+
 	addr := ":8080"
 
 	app, err := app.NewApplication(dsn)

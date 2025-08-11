@@ -8,7 +8,7 @@ import (
 func NewRouter(handler *ihttp.Handler) http.Handler {
 	router := http.NewServeMux()
 
-	router.HandleFunc("GET /", handler.Catalog)
+	router.HandleFunc("GET /catalog", handler.Catalog)
 	router.HandleFunc("GET /post/create", handler.Create)
 	router.HandleFunc("GET /post/{id}", handler.ViewPost)
 	router.HandleFunc("GET /archive/post", handler.Archive)

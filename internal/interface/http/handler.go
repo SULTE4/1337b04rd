@@ -34,12 +34,12 @@ func (h *Handler) Archive(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	data := h.NewTemplateData(r)
 
-	h.render(w, r, http.StatusOK, "create-post.html", data)
+	h.render(w, r, http.StatusOK, "create-post.html", *data)
 	w.Write([]byte("Create page"))
 }
 
 func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseForm()
+	err := r.ParseMultipartForm(10 << 20) // 10 MB в памяти
 	if err != nil {
 		h.serverError(w, r, err)
 		return
@@ -56,8 +56,11 @@ func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	post.File = file
-	fmt.Println(post)
 	id, err := h.postService.CreatePost(post)
+	if err != nil {
+		h.serverError(w, r, err)
+		return
+	}
 	w.Write([]byte("Create page submission"))
 	http.Redirect(w, r, fmt.Sprintf("/post{%d}", id), http.StatusOK)
 
@@ -68,12 +71,12 @@ func (h *Handler) ViewPost(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (h *Handler) Error(w http.ResponseWriter, r *http.Response, errId int, message string) {
-	data := h.NewTemplateData(r)
-	data.ErrID = errId
-	data.ErrMessage = "occured error"
-	h.render(w, r, http.StatusOK, "error.html", data)
-}
+// func (h *Handler) Error(w http.ResponseWriter, r *http.Response, errId int, message string) {
+// 	data := h.NewTemplateData(r)
+// 	data.ErrID = errId
+// 	data.ErrMessage = "occured error"
+// 	h.render(w, r, http.StatusOK, "error.html", data)
+// }
 
 func (h *Handler) render(w http.ResponseWriter, r *http.Request, status int, page string, data templateData) {
 	ts, ok := h.templateCache[page]
