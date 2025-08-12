@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"os"
 
+	"1337b04rd/internal/adapters/s3"
+	"1337b04rd/internal/domain/comment"
 	"1337b04rd/internal/domain/post"
 	ihttp "1337b04rd/internal/interface/http"
 	"1337b04rd/internal/interface/router"
@@ -30,6 +32,11 @@ func NewApplication(dsn string) (*Application, error) {
 		return nil, err
 	}
 
+	err = db.Ping()
+	if err != nil {
+		return nil, err
+	}
+
 	templateCache, err := ihttp.NewTemplateCache()
 	if err != nil {
 		logger.Error(err.Error())
@@ -37,13 +44,20 @@ func NewApplication(dsn string) (*Application, error) {
 	}
 	// Init Store (adapters)
 	store := NewStore(db)
+	// S3 storage init
+	err = s3.InitS3()
+	if err != nil {
+		logger.Error(err.Error())
+		os.Exit(1)
+	}
 
 	// Init Domain Services
 	postService := post.NewService(store.PostRepo)
+	commentService := comment.NewService(store.CommentRepo)
 	// userService := user.NewService(store.UserRepo)
 
 	// Init Handlers
-	handler := ihttp.NewHandler(postService, templateCache)
+	handler := ihttp.NewHandler(postService, commentService, templateCache, logger)
 	router := router.NewRouter(handler)
 
 	return &Application{

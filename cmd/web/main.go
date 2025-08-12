@@ -2,6 +2,7 @@ package main
 
 import (
 	"1337b04rd/internal/app"
+	"flag"
 	"log"
 	"log/slog"
 	"net/http"
@@ -19,9 +20,10 @@ import (
 */
 
 func main() {
-	dsn := os.Getenv("DB_DSN")
+	addr := flag.String("port", ":8080", "server address")
+	flag.Parse()
 
-	addr := ":8080"
+	dsn := "postgres://postgres:pass@localhost:5432/mydb?sslmode=disable"
 
 	app, err := app.NewApplication(dsn)
 	if err != nil {
@@ -29,7 +31,7 @@ func main() {
 	}
 
 	srv := &http.Server{
-		Addr:         addr,
+		Addr:         *addr,
 		Handler:      *app.Router,
 		ErrorLog:     slog.NewLogLogger(app.Logger.Handler(), slog.LevelError),
 		IdleTimeout:  time.Minute,
@@ -37,7 +39,7 @@ func main() {
 		WriteTimeout: 10 * time.Second,
 	}
 
-	app.Logger.Info("Server running at", slog.String("addr", addr))
+	app.Logger.Info("Server running at", slog.String("addr", *addr))
 	err = srv.ListenAndServe()
 
 	app.Logger.Error(err.Error())

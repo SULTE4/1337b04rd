@@ -1,6 +1,7 @@
 package post
 
 import (
+	"1337b04rd/internal/adapters/s3"
 	"time"
 )
 
@@ -12,6 +13,13 @@ type Post struct {
 	UserID   int
 	Created  time.Time
 	Expires  time.Time
+}
+
+type CreatePostForm struct {
+	Name    string
+	Subject string
+	Comment string
+	File    s3.FileType
 }
 
 func newPost(title, content, imageURL string, id int) *Post {

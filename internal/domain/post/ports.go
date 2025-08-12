@@ -5,4 +5,5 @@ type Repository interface {
 	GetByID(id int) (Post, error)
 	GetAll() ([]Post, error)
 	DeleteById(id int) error
+	GetExpiredPosts() ([]Post, error)
 }

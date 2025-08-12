@@ -1,19 +1,33 @@
 package http
 
 import (
+	"1337b04rd/internal/domain/comment"
 	"1337b04rd/internal/domain/post"
 	"1337b04rd/web"
 	"io/fs"
 	"net/http"
 	"path/filepath"
 	"text/template"
+	"time"
 )
 
 type templateData struct {
 	Post       post.Post
 	Posts      []post.Post
+	Comments   []comment.Comment
 	ErrID      int
 	ErrMessage string
+}
+
+func humanDate(t time.Time) string {
+	if t.IsZero() {
+		return ""
+	}
+	return t.UTC().Format("02 Jan 2006 at 15:04")
+}
+
+var functions = template.FuncMap{
+	"humanDate": humanDate,
 }
 
 func NewTemplateCache() (map[string]*template.Template, error) {
@@ -27,7 +41,7 @@ func NewTemplateCache() (map[string]*template.Template, error) {
 	for _, page := range pages {
 		name := filepath.Base(page)
 
-		ts, err := template.New(name).ParseFS(web.Files, page)
+		ts, err := template.New(name).Funcs(functions).ParseFS(web.Files, page)
 		if err != nil {
 			return nil, err
 		}
@@ -37,6 +51,6 @@ func NewTemplateCache() (map[string]*template.Template, error) {
 	return cache, nil
 }
 
-func (h *Handler) NewTemplateData(r *http.Request) *templateData {
-	return &templateData{}
+func (h *Handler) NewTemplateData(r *http.Request) templateData {
+	return templateData{}
 }

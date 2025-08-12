@@ -1,0 +1,85 @@
+package postgres
+
+import (
+	"1337b04rd/internal/domain/comment"
+	"database/sql"
+	"time"
+)
+
+type PostgresCommentRepo struct {
+	db *sql.DB
+}
+
+func NewCommentRepo(db *sql.DB) *PostgresCommentRepo {
+	return &PostgresCommentRepo{db: db}
+}
+
+func (r *PostgresCommentRepo) Insert(com comment.Comment) error {
+	create := `create TABLE if not EXISTS Comment(
+			comment_id serial primary key not null,
+			userID int not null,
+			content text,
+			imageURL varchar(255),
+			created timestamp not null,
+			postID int REFERENCES Post(id));`
+	stmt := `INSERT INTO comment (userid, content, imageurl, created, postid)
+			VALUES($1, $2, $3, $4, $5)`
+
+	_, err := r.db.Exec(create)
+	if err != nil {
+		return err
+	}
+	_, err = r.db.Exec(stmt, com.UserID, com.Content, com.ImageURL, com.Created, com.PostID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *PostgresCommentRepo) GetCommentsByPost(id int) ([]comment.Comment, error) {
+	stmt := `SELECT * FROM comment 
+			WHERE postid = $1`
+
+	rows, err := r.db.Query(stmt, id)
+	if err != nil {
+		return []comment.Comment{}, err
+	}
+	defer rows.Close()
+
+	var comments []comment.Comment
+	for rows.Next() {
+		var c comment.Comment
+		err = rows.Scan(
+			&c.CommentID,
+			&c.UserID,
+			&c.Content,
+			&c.ImageURL,
+			&c.Created,
+			&c.PostID,
+		)
+		if err != nil {
+			return []comment.Comment{}, err
+		}
+		comments = append(comments, c)
+	}
+	err = rows.Err()
+	if err != nil {
+		return []comment.Comment{}, err
+	}
+	return comments, nil
+}
+
+func (r *PostgresCommentRepo) UpdatePostExpire(id int) error {
+	stmt := `UPDATE post
+			SET expires = $1
+			WHERE id = $2`
+
+	t := time.Now().UTC().Add(15 * time.Minute)
+
+	_, err := r.db.Exec(stmt, t, id)
+	if err != nil {
+		return err
+	}
+	return nil
+}

@@ -3,7 +3,8 @@ package postgres
 import (
 	"1337b04rd/internal/domain/post"
 	"database/sql"
-	"time"
+	"errors"
+	"fmt"
 )
 
 type PostgresPostRepo struct {
@@ -15,11 +16,26 @@ func NewPostRepo(db *sql.DB) *PostgresPostRepo {
 }
 
 func (r *PostgresPostRepo) Insert(p post.Post) (int, error) {
-	stmt := `INSERT INTO "Post" (title, content, imageURL, userID, created, expires)
+	create := `create TABLE if not exists Post  (
+    id serial primary key not null,
+    title varchar(50) not null,
+    content text,
+    imageURL varchar(255),
+    userID int not null,
+    created timestamp not null,
+    expires timestamp not null
+);
+`
+	stmt := `INSERT INTO post (title, content, imageURL, userID, created, expires)
 			VALUES ($1, $2, $3, $4, $5, $6) returning id;`
 	id := 0
 
-	err := r.db.QueryRow(stmt, p.Title, p.Content, p.ImageURL, p.UserID, p.Created, p.Expires).Scan(&id)
+	_, err := r.db.Exec(create)
+	if err != nil {
+		return 0, err
+	}
+
+	err = r.db.QueryRow(stmt, p.Title, p.Content, p.ImageURL, p.UserID, p.Created, p.Expires).Scan(&id)
 	if err != nil {
 		return 0, err
 	}
@@ -28,16 +44,69 @@ func (r *PostgresPostRepo) Insert(p post.Post) (int, error) {
 }
 
 func (r *PostgresPostRepo) GetByID(id int) (post.Post, error) {
-	return post.Post{}, nil
+	var p post.Post
+	stmt := `SELECT * FROM post
+			WHERE id = $1`
+	row := r.db.QueryRow(stmt, id)
+	err := row.Scan(
+		&p.ID,
+		&p.Title,
+		&p.Content,
+		&p.ImageURL,
+		&p.UserID,
+		&p.Created,
+		&p.Expires,
+	)
+
+	if err != nil {
+		if errors.As(err, sql.ErrNoRows) {
+			return post.Post{}, fmt.Errorf("invalid post id: %d", id)
+		}
+		return post.Post{}, err
+	}
+	return p, nil
 }
 
 func (r *PostgresPostRepo) GetAll() ([]post.Post, error) {
-	// stmt := `SELECT `
-	return []post.Post{}, nil
+	var posts []post.Post
+
+	stmt := `SELECT * 
+			FROM post
+			WHERE expires > NOW()
+			ORDER BY expires ASC;`
+
+	rows, err := r.db.Query(stmt)
+	if err != nil {
+		return []post.Post{}, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var p post.Post
+		err = rows.Scan(
+			&p.ID,
+			&p.Title,
+			&p.Content,
+			&p.ImageURL,
+			&p.UserID,
+			&p.Created,
+			&p.Expires,
+		)
+		if err != nil {
+			return []post.Post{}, err
+		}
+		posts = append(posts, p)
+	}
+	err = rows.Err()
+	if err != nil {
+		return []post.Post{}, err
+	}
+
+	return posts, nil
 }
 
 func (r *PostgresPostRepo) DeleteById(id int) error {
-	stmt := `DELETE FROM "Post"
+	stmt := `DELETE FROM post
 			WHERE id = $1`
 
 	_, err := r.db.Exec(stmt, id)
@@ -47,16 +116,44 @@ func (r *PostgresPostRepo) DeleteById(id int) error {
 	return nil
 }
 
-func (r *PostgresPostRepo) UpdatePostExpire(id int) error {
-	stmt := `UPDATE "Post"
-			SET expires = $1
-			WHERE id = $2`
+func (r *PostgresPostRepo) GetExpiredPosts() ([]post.Post, error) {
+	var posts []post.Post
 
-	t := time.Now().UTC().Add(15 * time.Minute)
+	stmt := `SELECT * 
+			FROM post
+			WHERE expires <= NOW()
+			ORDER BY expires ASC;`
 
-	_, err := r.db.Exec(stmt, t, id)
+	rows, err := r.db.Query(stmt)
 	if err != nil {
-		return err
+		return []post.Post{}, err
 	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var p post.Post
+		err = rows.Scan(
+			&p.ID,
+			&p.Title,
+			&p.Content,
+			&p.ImageURL,
+			&p.UserID,
+			&p.Created,
+			&p.Expires,
+		)
+		if err != nil {
+			return []post.Post{}, err
+		}
+		posts = append(posts, p)
+	}
+	err = rows.Err()
+	if err != nil {
+		return []post.Post{}, err
+	}
+
+	return posts, nil
+}
+
+func (r *PostgresPostRepo) IsPostExpired(id int) error {
 	return nil
 }

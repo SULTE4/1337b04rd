@@ -22,30 +22,30 @@
     </style>
 </head>
 <body>
-<a href="/archive">Back to Archive</a>
-<h1>{{.Post.Title}} (Archived)</h1>
-<p>{{.Post.Content}}</p>
-{{if .Post.ImageURL}}
-<img src="{{.Post.ImageURL}}" alt="Post Image">
-{{end}}
-<p>Post ID: {{.Post.ID}}</p>
-<h2>Comments</h2>
-<div class="comments">
-    {{range .Comments}}
-    <div class="comment">
-        <img class="avatar" src="{{.AvatarURL}}" alt="User Avatar">
-        <div class="comment-content">
-            <p><strong>Comment ID:</strong> {{.ID}}</p>
-            {{if .ReplyToID}}
-            <p><em>Reply to ID: {{.ReplyToID}}</em></p>
-            {{end}}
-            <p>{{.Content}}</p>
-        </div>
-    </div>
-    {{else}}
-    <p>No comments available.</p>
+    <a href="/archive">Back to Archive</a>
+    <h1>{{.Post.Title}} (Archived)</h1>
+    <p>{{.Post.Content}}</p>
+    {{if .Post.ImageURL}}
+        <img src="{{.Post.ImageURL}}" alt="Post Image">
     {{end}}
-</div>
+    <p>Post ID: {{.Post.ID}}</p>
+    <h2>Comments</h2>
+    <div class="comments">
+        {{range .Comments}}
+        <div class="comment">
+            <img class="avatar" src="{{.AvatarURL}}" alt="User Avatar">
+            <div class="comment-content">
+                <p><strong>Comment ID:</strong> {{.ID}}</p>
+                {{if .ReplyToID}}
+                <p><em>Reply to ID: {{.ReplyToID}}</em></p>
+                {{end}}
+                <p>{{.Content}}</p>
+            </div>
+        </div>
+        {{else}}
+        <p>No comments available.</p>
+        {{end}}
+    </div>
 <!-- Comment form is omitted since adding new comments is not allowed -->
 </body>
 </html>

@@ -57,72 +57,45 @@
     <!-- Main Post -->
     <div class="post">
         <div class="header">
-<!--            <img src="{{.UserAvatar}}" alt="no pic" width="30px" height="30px">-->
             <img src="https://rickandmortyapi.com/api/character/avatar/1.jpeg" alt="no pic" width="50px" height="50px">
-            <b>{{.UserName}}</b>
-            {{.DataTime}}
-            {{.PostID}}
+            {{humanDate .Post.Created}}
+            {{.Post.ID}}
         </div>
         <div class="content">
-            <a href="https://www.google.com/images/branding/googlelogo/2x/googlelogo_light_color_272x92dp.png">
-                <img src="https://www.google.com/images/branding/googlelogo/2x/googlelogo_light_color_272x92dp.png" alt="no pic">
+            <a href="{{.Post.ImageURL}}">
+                <img src="{{.Post.ImageURL}}" alt="no pic">
             </a>
             <div class="text">
-                <h3>{{.Title}}</h3>
-                {{.Content}}
+                <h3>{{.Post.Title}}</h3>
+                {{.Post.Content}}
             </div>
         </div>
 
     </div>
-    <!-- Comments Section -->
     <div class="comments">
-        <h2>Comments</h2>
-    <ul class="comment-list">
-        {{range .Comments}}
-        <li class="comment">
-            <div class="header">
-                <!--            <img src="{{.UserAvatar}}" alt="no pic" width="30px" height="30px">-->
-                <img src="{{.AvaterLink}}" alt="no pic" width="50px" height="50px">
-                <b>{{.UserName}}</b>
-                {{.DataTime}}
-                {{.CommentID}}
-            </div>
-            <div class="content">
-                <a href="https://www.google.com/images/branding/googlelogo/2x/googlelogo_light_color_272x92dp.png">
-                    <img src="https://www.google.com/images/branding/googlelogo/2x/googlelogo_light_color_272x92dp.png" alt="no pic"  width="100px" height="100px">
-                </a>
-                <div class="text">
-                    {{.Content}}
+        <ul class="comment-list">
+            {{range .Comments}}
+            <li class="comment">
+                <div class="header">
+                    <!-- there was user info take again from git -->
+                    {{humanDate .Created}}
+                    {{.CommentID}}
                 </div>
-            </div>
-        </li>
-        {{end}}
-        <li class="comment">
-            <div class="header">
-                <!--            <img src="{{.UserAvatar}}" alt="no pic" width="30px" height="30px">-->
-                <img src="https://rickandmortyapi.com/api/character/avatar/1.jpeg" alt="no pic" width="50px" height="50px">
-                <b>{{.UserName}}</b>
-                {{.DataTime}}
-                {{.PostID}}
-            </div>
-            <div class="content">
-                <a href="https://www.google.com/images/branding/googlelogo/2x/googlelogo_light_color_272x92dp.png">
-                    <img src="https://www.google.com/images/branding/googlelogo/2x/googlelogo_light_color_272x92dp.png" alt="no pic"  width="100px" height="100px">
-                </a>
-                <div class="text">
-                    {{.Content}}
+                <div class="content">
+                    <a href="{{.ImageURL}}">
+                        <img src="{{.ImageURL}}" alt="no pic"  width="100px" height="100px">
+                    </a>
+                    <div class="text">
+                        {{.Content}}
+                    </div>
                 </div>
-            </div>
-        </li>
-    </ul>
-        <!-- Comment Example -->
-
+            </li>
+            {{end}}
+        </ul>
     </div>
-
-    <!-- Add a Comment Section -->
     <div class="add-comment">
         <h3>Add a Comment</h3>
-        <form action="/submit-comment" method="POST">
+        <form action="/submit-comment/{{.Post.ID}}" method="POST" enctype="multipart/form-data">
             <textarea name="comment" placeholder="Write your comment here..."></textarea>
             <tr>
                 <td>File</td>

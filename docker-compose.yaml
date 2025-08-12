@@ -1,26 +1,10 @@
-version: "3.8"
+version: '3.9'
 
 services:
-  app:
-    build: .
-    container_name: myapp_container
-    depends_on:
-      - db
-      - minio
-    environment:
-      DB_DSN: "postgres://postgres:pass@db:5432/mydb?sslmode=disable"
-      MINIO_ENDPOINT: "http://minio:9000"
-      MINIO_ACCESS_KEY: "minioadmin"
-      MINIO_SECRET_KEY: "minioadmin"
-      MINIO_POST_BUCKET: "post-images"
-      MINIO_COMMENT_BUCKET: "comment-images"
-    ports:
-      - "8080:8080"
-    restart: always
-
-  db:
+  postgres:
     image: postgres:16
     container_name: mydb_container
+    restart: always
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: pass
@@ -28,39 +12,7 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - db_data:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-    restart: always
-
-  minio:
-    image: quay.io/minio/minio:latest
-    container_name: minio_container
-    environment:
-      MINIO_ROOT_USER: minioadmin
-      MINIO_ROOT_PASSWORD: minioadmin
-    command: server /data --console-address ":9001"
-    ports:
-      - "9000:9000"
-      - "9001:9001"
-    volumes:
-      - minio_data:/data
-    restart: always
-
-  minio-init:
-    image: minio/mc:latest
-    depends_on:
-      - minio
-    entrypoint: >
-      /bin/sh -c "
-      sleep 5 &&
-      mc alias set local http://minio:9000 minioadmin minioadmin &&
-      mc mb local/post-images &&
-      mc mb local/comment-images &&
-      mc anonymous set public local/post-images &&
-      mc anonymous set public local/comment-images
-      "
-    restart: "no"
+      - pg_data:/var/lib/postgresql/data
 
 volumes:
-  db_data:
-  minio_data:
+  pg_data:
