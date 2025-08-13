@@ -15,5 +15,5 @@ create TABLE if not EXISTS Comment(
     content text,
     imageURL varchar(255),
     created timestamp not null,
-    postID int REFERENCES Post(id)
+    postID int REFERENCES Post(id) ON DELETE CASCADE
 );

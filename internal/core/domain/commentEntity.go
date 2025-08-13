@@ -1,4 +1,4 @@
-package comment
+package domain
 
 import (
 	"1337b04rd/internal/adapters/s3"
@@ -21,7 +21,7 @@ type CreateCommentForm struct {
 	CommentFile s3.FileType
 }
 
-func newComment(usID, postID int, content, imageurl string) Comment {
+func NewComment(usID, postID int, content, imageurl string) Comment {
 	return Comment{
 		UserID:   usID,
 		PostID:   postID,

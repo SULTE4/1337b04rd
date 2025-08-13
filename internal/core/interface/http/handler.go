@@ -2,8 +2,10 @@ package http
 
 import (
 	"1337b04rd/internal/adapters/s3"
-	"1337b04rd/internal/domain/comment"
-	"1337b04rd/internal/domain/post"
+	appErrors "1337b04rd/internal/appError"
+	"1337b04rd/internal/core/domain"
+	"1337b04rd/internal/core/service"
+	"bytes"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -12,14 +14,14 @@ import (
 )
 
 type Handler struct {
-	postService *post.Service
+	postService *service.PostService
 	// userService   *user.Service
-	commentService *comment.Service
+	commentService *service.CommentService
 	templateCache  map[string]*template.Template
 	logger         *slog.Logger
 }
 
-func NewHandler(postService *post.Service, commentService *comment.Service, templateCache map[string]*template.Template, logger *slog.Logger) *Handler {
+func NewHandler(postService *service.PostService, commentService *service.CommentService, templateCache map[string]*template.Template, logger *slog.Logger) *Handler {
 	return &Handler{
 		postService:    postService,
 		commentService: commentService,
@@ -64,22 +66,29 @@ func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 	}
 	defer r.MultipartForm.RemoveAll()
 
-	var post post.CreatePostForm
+	var post domain.CreatePostForm
 
 	post.Name = r.PostForm.Get("name")
 	post.Subject = r.PostForm.Get("subject")
 	post.Comment = r.PostForm.Get("comment")
 
 	file, handler, err := r.FormFile("file")
+
+	post.File = s3.FileType{
+		File:    file,
+		Handler: handler,
+		Exist:   true,
+	}
+
+	if err == http.ErrMissingFile {
+		err = nil
+		post.File.Exist = false
+	}
 	if err != nil {
 		h.serverError(w, r, err)
 		return
 	}
 
-	post.File = s3.FileType{
-		File:    file,
-		Handler: handler,
-	}
 	id, err := h.postService.CreatePost(post)
 	if err != nil {
 		h.serverError(w, r, err)
@@ -154,7 +163,7 @@ func (h *Handler) CreateComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var com comment.CreateCommentForm
+	var com domain.CreateCommentForm
 
 	// name will be taken from cookie (middleware)
 	com.Comment = r.PostForm.Get("comment")
@@ -162,21 +171,26 @@ func (h *Handler) CreateComment(w http.ResponseWriter, r *http.Request) {
 
 	file, handler, err := r.FormFile("file")
 
+	com.CommentFile = s3.FileType{
+		File:    file,
+		Handler: handler,
+		Exist:   true,
+	}
+
+	if err == http.ErrMissingFile {
+		err = nil
+		com.CommentFile.Exist = false
+	}
 	if err != nil {
-		if err != http.ErrMissingFile {
-			h.serverError(w, r, err)
-			return
-		}
+		h.serverError(w, r, err)
+		return
 	}
-	if err == nil {
-		com.CommentFile = s3.FileType{
-			File:    file,
-			Handler: handler,
-		}
-	}
-	err = nil
+
 	err = h.commentService.AddComment(com)
 	if err != nil {
+		if err == appErrors.ErrPostNotAvailable {
+
+		}
 		h.serverError(w, r, err)
 		return
 	}
@@ -190,13 +204,16 @@ func (h *Handler) render(w http.ResponseWriter, r *http.Request, status int, pag
 		h.serverError(w, r, err)
 		return
 	}
-	w.WriteHeader(status)
+	var buf bytes.Buffer
 
-	err := ts.Execute(w, data)
+	err := ts.ExecuteTemplate(&buf, page, data)
 	if err != nil {
 		h.serverError(w, r, err)
 		return
 	}
+
+	w.WriteHeader(status)
+	_, _ = buf.WriteTo(w)
 
 }
 

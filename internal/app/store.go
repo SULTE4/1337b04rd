@@ -2,15 +2,14 @@ package app
 
 import (
 	"1337b04rd/internal/adapters/postgres"
-	"1337b04rd/internal/domain/comment"
-	"1337b04rd/internal/domain/post"
+	"1337b04rd/internal/core/ports"
 	"database/sql"
 )
 
 type Store struct {
-	PostRepo post.Repository
+	PostRepo ports.PostRepository
 	// UserRepo user.Repository
-	CommentRepo comment.Repository
+	CommentRepo ports.CommentRepository
 }
 
 func NewStore(db *sql.DB) *Store {

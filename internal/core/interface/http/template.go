@@ -1,8 +1,7 @@
 package http
 
 import (
-	"1337b04rd/internal/domain/comment"
-	"1337b04rd/internal/domain/post"
+	"1337b04rd/internal/core/domain"
 	"1337b04rd/web"
 	"io/fs"
 	"net/http"
@@ -12,9 +11,9 @@ import (
 )
 
 type templateData struct {
-	Post       post.Post
-	Posts      []post.Post
-	Comments   []comment.Comment
+	Post       domain.Post
+	Posts      []domain.Post
+	Comments   []domain.Comment
 	ErrID      int
 	ErrMessage string
 }

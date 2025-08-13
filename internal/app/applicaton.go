@@ -7,10 +7,9 @@ import (
 	"os"
 
 	"1337b04rd/internal/adapters/s3"
-	"1337b04rd/internal/domain/comment"
-	"1337b04rd/internal/domain/post"
-	ihttp "1337b04rd/internal/interface/http"
-	"1337b04rd/internal/interface/router"
+	ihttp "1337b04rd/internal/core/interface/http"
+	"1337b04rd/internal/core/interface/router"
+	"1337b04rd/internal/core/service"
 )
 
 type Application struct {
@@ -52,8 +51,8 @@ func NewApplication(dsn string) (*Application, error) {
 	}
 
 	// Init Domain Services
-	postService := post.NewService(store.PostRepo)
-	commentService := comment.NewService(store.CommentRepo)
+	postService := service.NewPostService(store.PostRepo)
+	commentService := service.NewCommentService(store.CommentRepo)
 	// userService := user.NewService(store.UserRepo)
 
 	// Init Handlers

@@ -1,7 +1,7 @@
 package postgres
 
 import (
-	"1337b04rd/internal/domain/comment"
+	"1337b04rd/internal/core/domain"
 	"database/sql"
 	"time"
 )
@@ -14,7 +14,7 @@ func NewCommentRepo(db *sql.DB) *PostgresCommentRepo {
 	return &PostgresCommentRepo{db: db}
 }
 
-func (r *PostgresCommentRepo) Insert(com comment.Comment) error {
+func (r *PostgresCommentRepo) Insert(com domain.Comment) error {
 	create := `create TABLE if not EXISTS Comment(
 			comment_id serial primary key not null,
 			userID int not null,
@@ -37,19 +37,19 @@ func (r *PostgresCommentRepo) Insert(com comment.Comment) error {
 	return nil
 }
 
-func (r *PostgresCommentRepo) GetCommentsByPost(id int) ([]comment.Comment, error) {
+func (r *PostgresCommentRepo) GetCommentsByPost(id int) ([]domain.Comment, error) {
 	stmt := `SELECT * FROM comment 
 			WHERE postid = $1`
 
 	rows, err := r.db.Query(stmt, id)
 	if err != nil {
-		return []comment.Comment{}, err
+		return []domain.Comment{}, err
 	}
 	defer rows.Close()
 
-	var comments []comment.Comment
+	var comments []domain.Comment
 	for rows.Next() {
-		var c comment.Comment
+		var c domain.Comment
 		err = rows.Scan(
 			&c.CommentID,
 			&c.UserID,
@@ -59,13 +59,13 @@ func (r *PostgresCommentRepo) GetCommentsByPost(id int) ([]comment.Comment, erro
 			&c.PostID,
 		)
 		if err != nil {
-			return []comment.Comment{}, err
+			return []domain.Comment{}, err
 		}
 		comments = append(comments, c)
 	}
 	err = rows.Err()
 	if err != nil {
-		return []comment.Comment{}, err
+		return []domain.Comment{}, err
 	}
 	return comments, nil
 }
@@ -82,4 +82,16 @@ func (r *PostgresCommentRepo) UpdatePostExpire(id int) error {
 		return err
 	}
 	return nil
+}
+
+// if post expired then true, else false
+func (r *PostgresCommentRepo) IsPostExpired(id int) (bool, error) {
+	stmt := `SELECT (expires < NOW()) FROM post
+		WHERE  id = $1`
+
+	var is bool
+
+	_ = r.db.QueryRow(stmt, id).Scan(&is)
+
+	return is, nil
 }

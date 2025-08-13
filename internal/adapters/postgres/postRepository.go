@@ -1,7 +1,7 @@
 package postgres
 
 import (
-	"1337b04rd/internal/domain/post"
+	"1337b04rd/internal/core/domain"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -15,7 +15,7 @@ func NewPostRepo(db *sql.DB) *PostgresPostRepo {
 	return &PostgresPostRepo{db: db}
 }
 
-func (r *PostgresPostRepo) Insert(p post.Post) (int, error) {
+func (r *PostgresPostRepo) Insert(p domain.Post) (int, error) {
 	create := `create TABLE if not exists Post  (
     id serial primary key not null,
     title varchar(50) not null,
@@ -43,8 +43,8 @@ func (r *PostgresPostRepo) Insert(p post.Post) (int, error) {
 	return id, nil
 }
 
-func (r *PostgresPostRepo) GetByID(id int) (post.Post, error) {
-	var p post.Post
+func (r *PostgresPostRepo) GetByID(id int) (domain.Post, error) {
+	var p domain.Post
 	stmt := `SELECT * FROM post
 			WHERE id = $1`
 	row := r.db.QueryRow(stmt, id)
@@ -60,15 +60,15 @@ func (r *PostgresPostRepo) GetByID(id int) (post.Post, error) {
 
 	if err != nil {
 		if errors.As(err, sql.ErrNoRows) {
-			return post.Post{}, fmt.Errorf("invalid post id: %d", id)
+			return domain.Post{}, fmt.Errorf("invalid post id: %d", id)
 		}
-		return post.Post{}, err
+		return domain.Post{}, err
 	}
 	return p, nil
 }
 
-func (r *PostgresPostRepo) GetAll() ([]post.Post, error) {
-	var posts []post.Post
+func (r *PostgresPostRepo) GetAll() ([]domain.Post, error) {
+	var posts []domain.Post
 
 	stmt := `SELECT * 
 			FROM post
@@ -77,12 +77,12 @@ func (r *PostgresPostRepo) GetAll() ([]post.Post, error) {
 
 	rows, err := r.db.Query(stmt)
 	if err != nil {
-		return []post.Post{}, err
+		return []domain.Post{}, err
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-		var p post.Post
+		var p domain.Post
 		err = rows.Scan(
 			&p.ID,
 			&p.Title,
@@ -93,13 +93,13 @@ func (r *PostgresPostRepo) GetAll() ([]post.Post, error) {
 			&p.Expires,
 		)
 		if err != nil {
-			return []post.Post{}, err
+			return []domain.Post{}, err
 		}
 		posts = append(posts, p)
 	}
 	err = rows.Err()
 	if err != nil {
-		return []post.Post{}, err
+		return []domain.Post{}, err
 	}
 
 	return posts, nil
@@ -116,8 +116,8 @@ func (r *PostgresPostRepo) DeleteById(id int) error {
 	return nil
 }
 
-func (r *PostgresPostRepo) GetExpiredPosts() ([]post.Post, error) {
-	var posts []post.Post
+func (r *PostgresPostRepo) GetExpiredPosts() ([]domain.Post, error) {
+	var posts []domain.Post
 
 	stmt := `SELECT * 
 			FROM post
@@ -126,12 +126,12 @@ func (r *PostgresPostRepo) GetExpiredPosts() ([]post.Post, error) {
 
 	rows, err := r.db.Query(stmt)
 	if err != nil {
-		return []post.Post{}, err
+		return []domain.Post{}, err
 	}
 	defer rows.Close()
 
 	for rows.Next() {
-		var p post.Post
+		var p domain.Post
 		err = rows.Scan(
 			&p.ID,
 			&p.Title,
@@ -142,13 +142,13 @@ func (r *PostgresPostRepo) GetExpiredPosts() ([]post.Post, error) {
 			&p.Expires,
 		)
 		if err != nil {
-			return []post.Post{}, err
+			return []domain.Post{}, err
 		}
 		posts = append(posts, p)
 	}
 	err = rows.Err()
 	if err != nil {
-		return []post.Post{}, err
+		return []domain.Post{}, err
 	}
 
 	return posts, nil

@@ -1,4 +1,4 @@
-package post
+package domain
 
 import (
 	"1337b04rd/internal/adapters/s3"
@@ -22,7 +22,7 @@ type CreatePostForm struct {
 	File    s3.FileType
 }
 
-func newPost(title, content, imageURL string, id int) *Post {
+func NewPost(title, content, imageURL string, id int) *Post {
 	t := time.Now().UTC()
 	return &Post{
 		Title:    title,

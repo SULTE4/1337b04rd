@@ -1,7 +1,6 @@
 package s3
 
 import (
-	"fmt"
 	"io"
 	"log/slog"
 	"mime/multipart"
@@ -12,12 +11,13 @@ import (
 type FileType struct {
 	File    multipart.File
 	Handler *multipart.FileHeader
+	Exist   bool
 }
 
 var (
 	directoryPath = "./s3_storage"
-	postPath      = "./s3_storage/postsImg"
-	commentPath   = "./s3_storage/commentsImg"
+	postPath      = "/postsImg"
+	commentPath   = "/commentsImg"
 )
 
 func InitS3() error {
@@ -35,9 +35,12 @@ func InitS3() error {
 
 func UploadObject(isPostImg bool, f FileType) (string, error) {
 
-	// if f.Handler.Size == 0 {
-	// 	return "", nil
-	// }
+	if !f.Exist {
+		return "", nil
+	}
+
+	// ct := f.Handler.Header.Get("Content-Type")
+	// need to implement that only image type has permission
 
 	var basePath string
 	if isPostImg {
@@ -46,15 +49,16 @@ func UploadObject(isPostImg bool, f FileType) (string, error) {
 		basePath = commentPath
 	}
 
+	// need to test проверка по инвалидных путей или данных
+
 	// Ensure directory exists
-	if err := os.MkdirAll(basePath, 0755); err != nil {
-		fmt.Println("fdfsd")
+	if err := os.MkdirAll(filepath.Join(directoryPath, basePath), 0755); err != nil {
 		return "", err
 	}
-	fmt.Println("haha")
+
 	// Use filepath.Join for OS-safe paths
 	fileName := filepath.Base(f.Handler.Filename) // prevents path traversal
-	fullPath := filepath.Join(basePath, fileName)
+	fullPath := filepath.Join(directoryPath, basePath, fileName)
 
 	// Create file
 	newFile, err := os.Create(fullPath)
@@ -68,8 +72,8 @@ func UploadObject(isPostImg bool, f FileType) (string, error) {
 		return "", err
 	}
 
-	fmt.Println("File saved to:", fullPath)
-	return fullPath, nil
+	// fmt.Println("File saved to:", fullPath)
+	return filepath.Join(basePath, fileName), nil
 }
 
 func GetObject(imageUrl string) {
