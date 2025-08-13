@@ -59,7 +59,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseMultipartForm(10 << 20) // 10 MB в памяти
+	err := r.ParseMultipartForm(5 << 20) // 10 MB в памяти допускает размеры
 	if err != nil {
 		h.serverError(w, r, err)
 		return
@@ -135,8 +135,15 @@ func (h *Handler) ViewArchivePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	comments, err := h.commentService.GetPostComments(id)
+	if err != nil {
+		h.serverError(w, r, err)
+		return
+	}
+
 	data := h.NewTemplateData(r)
 	data.Post = p
+	data.Comments = comments
 
 	h.render(w, r, http.StatusOK, "archive-post.html", data)
 
@@ -187,10 +194,12 @@ func (h *Handler) CreateComment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = h.commentService.AddComment(com)
+	if err == appErrors.ErrPostNotAvailable {
+		h.serverError(w, r, err)
+		// надо что бы перекинуло в error page
+		return
+	}
 	if err != nil {
-		if err == appErrors.ErrPostNotAvailable {
-
-		}
 		h.serverError(w, r, err)
 		return
 	}

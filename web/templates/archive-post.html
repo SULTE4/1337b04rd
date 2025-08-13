@@ -26,19 +26,17 @@
     <h1>{{.Post.Title}} (Archived)</h1>
     <p>{{.Post.Content}}</p>
     {{if .Post.ImageURL}}
-        <img src="{{.Post.ImageURL}}" alt="Post Image">
+        <img src="{{.Post.ImageURL}}" alt="Post Image" style="max-width: 100%; max-height: 400px; object-fit: contain;">
     {{end}}
     <p>Post ID: {{.Post.ID}}</p>
     <h2>Comments</h2>
     <div class="comments">
         {{range .Comments}}
         <div class="comment">
-            <img class="avatar" src="{{.AvatarURL}}" alt="User Avatar">
+            <!-- remake with avater needed -->
             <div class="comment-content">
-                <p><strong>Comment ID:</strong> {{.ID}}</p>
-                {{if .ReplyToID}}
-                <p><em>Reply to ID: {{.ReplyToID}}</em></p>
-                {{end}}
+                <p><strong>Comment ID:</strong> {{.CommentID}}</p>
+                <!-- need image , or recheck git repo templates -->
                 <p>{{.Content}}</p>
             </div>
         </div>
