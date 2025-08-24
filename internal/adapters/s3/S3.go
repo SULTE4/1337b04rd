@@ -1,12 +1,22 @@
 package s3
 
 import (
+	"errors"
+	"fmt"
 	"io"
 	"log/slog"
 	"mime/multipart"
 	"os"
 	"path/filepath"
+	"strings"
 )
+
+type S3Repo struct {
+}
+
+func NewS3Repo() (*S3Repo, error) {
+	return &S3Repo{}, initS3()
+}
 
 type FileType struct {
 	File    multipart.File
@@ -16,66 +26,89 @@ type FileType struct {
 
 var (
 	directoryPath = "./s3_storage"
-	postPath      = "/postsImg"
-	commentPath   = "/commentsImg"
+	postBucket    = "/postsImg"
+	commentBucket = "/commentsImg"
+	maxFileSize   = 5 << 20 // 5 MB
+	allowedTypes  = []string{"image/jpeg", "image/png", "image/gif"}
 )
 
-func InitS3() error {
+func initS3() error {
+	buckets := []string{postBucket, commentBucket}
 
-	if _, err := os.Stat(directoryPath); os.IsNotExist(err) {
-		err := os.MkdirAll(directoryPath, 0755)
-		if err != nil {
-			return err
+	for _, b := range buckets {
+		path := filepath.Join(directoryPath, b)
+		if _, err := os.Stat(path); os.IsNotExist(err) {
+			if err := os.MkdirAll(path, 0755); err != nil {
+				return err
+			}
+			slog.Info("bucket created", "bucket", b)
 		}
-		slog.Info("s3 directory successfully created")
+	}
+	return nil
+}
+
+func validateFile(f FileType) error {
+	if !f.Exist {
+		return errors.New("no file uploaded")
+	}
+
+	if f.Handler.Size > int64(maxFileSize) {
+		return fmt.Errorf("file too large: %d bytes (limit %d)", f.Handler.Size, maxFileSize)
+	}
+
+	// Check type
+	ct := f.Handler.Header.Get("Content-Type")
+	valid := false
+	for _, t := range allowedTypes {
+		if strings.EqualFold(ct, t) {
+			valid = true
+			break
+		}
+	}
+	if !valid {
+		return fmt.Errorf("unsupported file type: %s", ct)
 	}
 
 	return nil
 }
 
-func UploadObject(isPostImg bool, f FileType) (string, error) {
+func (r *S3Repo) UploadObject(isPostImg bool, f FileType) (string, error) {
 
 	if !f.Exist {
 		return "", nil
 	}
 
-	// ct := f.Handler.Header.Get("Content-Type")
-	// need to implement that only image type has permission
-
-	var basePath string
-	if isPostImg {
-		basePath = postPath
-	} else {
-		basePath = commentPath
-	}
-
-	// need to test проверка по инвалидных путей или данных
-
-	// Ensure directory exists
-	if err := os.MkdirAll(filepath.Join(directoryPath, basePath), 0755); err != nil {
+	if err := validateFile(f); err != nil {
 		return "", err
 	}
 
-	// Use filepath.Join for OS-safe paths
-	fileName := filepath.Base(f.Handler.Filename) // prevents path traversal
-	fullPath := filepath.Join(directoryPath, basePath, fileName)
+	var bucket string
+	if isPostImg {
+		bucket = postBucket
+	} else {
+		bucket = commentBucket
+	}
 
-	// Create file
+	fileName := filepath.Base(f.Handler.Filename)
+	fullPath := filepath.Join(directoryPath, bucket, fileName)
+
 	newFile, err := os.Create(fullPath)
 	if err != nil {
 		return "", err
 	}
 	defer newFile.Close()
 
-	// Copy file content
 	if _, err := io.Copy(newFile, f.File); err != nil {
 		return "", err
 	}
 
-	// fmt.Println("File saved to:", fullPath)
-	return filepath.Join(basePath, fileName), nil
+	return filepath.Join(bucket, fileName), nil
 }
 
-func GetObject(imageUrl string) {
-
+func (r *S3Repo) GetObject(key string) (string, error) {
+	fullPath := filepath.Join(directoryPath, key)
+	if _, err := os.Stat(fullPath); os.IsNotExist(err) {
+		return "", errors.New("object not found")
+	}
+	return fullPath, nil
 }

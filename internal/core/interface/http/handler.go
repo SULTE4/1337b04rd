@@ -59,7 +59,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
-	err := r.ParseMultipartForm(5 << 20) // 10 MB в памяти допускает размеры
+	err := r.ParseMultipartForm(5 << 20)
 	if err != nil {
 		h.serverError(w, r, err)
 		return
@@ -195,8 +195,11 @@ func (h *Handler) CreateComment(w http.ResponseWriter, r *http.Request) {
 
 	err = h.commentService.AddComment(com)
 	if err == appErrors.ErrPostNotAvailable {
-		h.serverError(w, r, err)
-		// надо что бы перекинуло в error page
+		data := h.NewTemplateData(r)
+		data.ErrID = 403
+		data.ErrMessage = appErrors.ErrPostNotAvailable.Error()
+
+		h.render(w, r, http.StatusNotExtended, "error.html", data)
 		return
 	}
 	if err != nil {
@@ -232,6 +235,13 @@ func (h *Handler) serverError(w http.ResponseWriter, r *http.Request, err error)
 		uri    = r.URL.RequestURI()
 	)
 
-	slog.Error(err.Error(), slog.String("uri", uri), slog.String("method", method))
-	http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+	h.logger.Error(err.Error(), slog.String("uri", uri), slog.String("method", method))
+	data := h.NewTemplateData(r)
+
+	isCustomErr := appErrors.CustomError(err)
+
+	data.ErrID = isCustomErr.ErrID
+	data.ErrMessage = isCustomErr.Message.Error()
+	h.render(w, r, http.StatusBadRequest, "error.html", data)
+	// http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 }

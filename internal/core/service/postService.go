@@ -1,7 +1,6 @@
 package service
 
 import (
-	"1337b04rd/internal/adapters/s3"
 	"1337b04rd/internal/core/domain"
 	"1337b04rd/internal/core/ports"
 	"fmt"
@@ -10,14 +9,15 @@ import (
 
 type PostService struct {
 	repo ports.PostRepository
+	s3   ports.S3Repository
 }
 
-func NewPostService(repo ports.PostRepository) *PostService {
-	return &PostService{repo: repo}
+func NewPostService(repo ports.PostRepository, s3 ports.S3Repository) *PostService {
+	return &PostService{repo: repo, s3: s3}
 }
 
 func (s *PostService) CreatePost(p domain.CreatePostForm) (int, error) {
-	imageUrl, err := s3.UploadObject(true, p.File) // true if it is post image or not
+	imageUrl, err := s.s3.UploadObject(true, p.File) // true if it is post image or not
 	if err != nil {
 		return 0, err
 	}

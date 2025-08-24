@@ -36,23 +36,26 @@ func NewApplication(dsn string) (*Application, error) {
 		return nil, err
 	}
 
+	// parse to prepare html file in advance
 	templateCache, err := ihttp.NewTemplateCache()
 	if err != nil {
 		logger.Error(err.Error())
 		os.Exit(1)
 	}
+
 	// Init Store (adapters)
 	store := NewStore(db)
+
 	// S3 storage init
-	err = s3.InitS3()
+	s3Storage, err := s3.NewS3Repo()
 	if err != nil {
 		logger.Error(err.Error())
 		os.Exit(1)
 	}
 
 	// Init Domain Services
-	postService := service.NewPostService(store.PostRepo)
-	commentService := service.NewCommentService(store.CommentRepo)
+	postService := service.NewPostService(store.PostRepo, s3Storage)
+	commentService := service.NewCommentService(store.CommentRepo, s3Storage)
 	// userService := user.NewService(store.UserRepo)
 
 	// Init Handlers

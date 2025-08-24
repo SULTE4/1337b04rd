@@ -1,7 +1,6 @@
 package service
 
 import (
-	"1337b04rd/internal/adapters/s3"
 	"1337b04rd/internal/appError"
 	"1337b04rd/internal/core/domain"
 	"1337b04rd/internal/core/ports"
@@ -9,10 +8,11 @@ import (
 
 type CommentService struct {
 	repo ports.CommentRepository
+	s3   ports.S3Repository
 }
 
-func NewCommentService(repo ports.CommentRepository) *CommentService {
-	return &CommentService{repo: repo}
+func NewCommentService(repo ports.CommentRepository, s3 ports.S3Repository) *CommentService {
+	return &CommentService{repo: repo, s3: s3}
 }
 
 func (c *CommentService) AddComment(com domain.CreateCommentForm) error {
@@ -25,7 +25,7 @@ func (c *CommentService) AddComment(com domain.CreateCommentForm) error {
 		return appError.ErrPostNotAvailable
 	}
 
-	imageUrl, err := s3.UploadObject(false, com.CommentFile)
+	imageUrl, err := c.s3.UploadObject(false, com.CommentFile)
 	if err != nil {
 		return err
 	}
