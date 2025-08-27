@@ -6,9 +6,10 @@ import (
 	"net/http"
 	"os"
 
+	"1337b04rd/internal/adapters/external"
+	ihttp "1337b04rd/internal/adapters/interface/http"
+	"1337b04rd/internal/adapters/interface/router"
 	"1337b04rd/internal/adapters/s3"
-	ihttp "1337b04rd/internal/core/interface/http"
-	"1337b04rd/internal/core/interface/router"
 	"1337b04rd/internal/core/service"
 )
 
@@ -19,11 +20,7 @@ type Application struct {
 	Router *http.Handler
 }
 
-func NewApplication(dsn string) (*Application, error) {
-
-	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
-		AddSource: true,
-	}))
+func NewApplication(dsn string, logger slog.Logger) (*Application, error) {
 
 	// Connect DB
 	db, err := sql.Open("postgres", dsn)
@@ -44,7 +41,7 @@ func NewApplication(dsn string) (*Application, error) {
 	}
 
 	// Init Store (adapters)
-	store := NewStore(db)
+	store := NewStore(db, &logger)
 
 	// S3 storage init
 	s3Storage, err := s3.NewS3Repo()
@@ -53,19 +50,22 @@ func NewApplication(dsn string) (*Application, error) {
 		os.Exit(1)
 	}
 
+	//
+	externalApi := external.NewRandMApi(logger)
+
 	// Init Domain Services
 	postService := service.NewPostService(store.PostRepo, s3Storage)
 	commentService := service.NewCommentService(store.CommentRepo, s3Storage)
-	// userService := user.NewService(store.UserRepo)
+	userService := service.NewUserService(store.UserRepo, externalApi)
 
 	// Init Handlers
-	handler := ihttp.NewHandler(postService, commentService, templateCache, logger)
+	handler := ihttp.NewHandler(postService, commentService, userService, templateCache, &logger)
 	router := router.NewRouter(handler)
 
 	return &Application{
 		DB:     db,
 		Store:  store,
-		Logger: logger,
+		Logger: &logger,
 		Router: &router,
 	}, nil
 }
