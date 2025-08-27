@@ -1,68 +1,82 @@
 package external
 
 import (
+	"1337b04rd/internal/core/domain"
 	"encoding/json"
 	"fmt"
+	"io"
+	"log/slog"
 	"math/rand"
 	"net/http"
-	"time"
-
-	"1337b04rd/internal/core/ports"
 )
 
-type rickAPI struct {
-	client *http.Client
-	base   string
+type RickAndMortyApiRepo struct {
+	logger *slog.Logger
 }
 
-func NewRickAPI() ports.RickAPI {
-	return &rickAPI{
-		client: &http.Client{Timeout: 5 * time.Second},
-		base:   "https://rickandmortyapi.com/api",
+func NewRandMApi(logger slog.Logger) *RickAndMortyApiRepo {
+	return &RickAndMortyApiRepo{
+		logger: &logger,
 	}
 }
 
-type charactersResp struct {
-	Info struct {
-		Count int `json:"count"`
-	} `json:"info"`
-}
-
-type character struct {
-	Name  string `json:"name"`
-	Image string `json:"image"`
-}
-
-func (r *rickAPI) RandomCharacter() (string, string, int, error) {
-	// 1) get count
-	req, _ := http.NewRequest(http.MethodGet, r.base+"/character", nil)
-	resp, err := r.client.Do(req)
+func (a *RickAndMortyApiRepo) GetRandomCharacter(occupied []int) (domain.Character, error) {
+	// get character count
+	cnt, err := characterCount()
 	if err != nil {
-		return "", "", 0, err
+		a.logger.Error(err.Error())
+		return domain.Character{}, err
+	}
+	// get random character id
+	var id int
+	for {
+		id = rand.Intn(cnt) + 1
+		if !contains(occupied, id) {
+			break
+		}
+	}
+
+	resp, err := http.Get(fmt.Sprintf("https://rickandmortyapi.com/api/character/%d", id))
+	if err != nil {
+		a.logger.Error(err.Error())
+		return domain.Character{}, err
 	}
 	defer resp.Body.Close()
-	var cr charactersResp
-	if err := json.NewDecoder(resp.Body).Decode(&cr); err != nil {
-		return "", "", 0, err
-	}
-	if cr.Info.Count == 0 {
-		return "", "", 0, fmt.Errorf("no characters")
-	}
 
-	// 2) pick random id (1..count)
-	rand.Seed(time.Now().UnixNano())
-	id := 1 + rand.Intn(cr.Info.Count)
-
-	// 3) fetch character
-	req2, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/character/%d", r.base, id), nil)
-	resp2, err := r.client.Do(req2)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", "", cr.Info.Count, err
+		a.logger.Error(err.Error())
+		return domain.Character{}, err
 	}
-	defer resp2.Body.Close()
-	var c character
-	if err := json.NewDecoder(resp2.Body).Decode(&c); err != nil {
-		return "", "", cr.Info.Count, err
+
+	var character domain.Character
+	err = json.Unmarshal(body, &character)
+	if err != nil {
+		a.logger.Warn(err.Error())
+		return domain.Character{}, err
 	}
-	return c.Name, c.Image, cr.Info.Count, nil
+
+	return character, nil
+}
+
+func characterCount() (int, error) {
+	return 826, nil
+}
+
+// func main() {
+// 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+// 		AddSource: true,
+// 	}))
+// 	tmp := NewRandMApi(*logger)
+// 	tmp.GetRandomCharacter([]int{})
+
+// }
+
+func contains(slice []int, element int) bool {
+	for _, v := range slice {
+		if v == element {
+			return true // Element found
+		}
+	}
+	return false // Element not found
 }

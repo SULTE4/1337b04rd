@@ -22,9 +22,10 @@ func (s *PostService) CreatePost(p domain.CreatePostForm) (int, error) {
 		return 0, err
 	}
 
-	post := domain.NewPost(p.Subject, p.Comment, imageUrl, 99)
-
 	// add handle to empty data in post form
+
+	post := domain.NewPost(p.Subject, p.Comment, imageUrl, p.Name)
+
 	id, err := s.repo.Insert(*post)
 	if err != nil {
 		return 0, err

@@ -10,7 +10,7 @@ type Post struct {
 	Title    string
 	Content  string
 	ImageURL string
-	UserID   int
+	Username string
 	Created  time.Time
 	Expires  time.Time
 }
@@ -22,13 +22,13 @@ type CreatePostForm struct {
 	File    s3.FileType
 }
 
-func NewPost(title, content, imageURL string, id int) *Post {
+func NewPost(title, content, imageURL string, username string) *Post {
 	t := time.Now().UTC()
 	return &Post{
 		Title:    title,
 		Content:  content,
 		ImageURL: imageURL,
-		UserID:   id,
+		Username: username,
 		Created:  t,
 		Expires:  t.Add(time.Minute * 10),
 	}

@@ -3,34 +3,26 @@ package postgres
 import (
 	"1337b04rd/internal/core/domain"
 	"database/sql"
+	"log/slog"
 	"time"
 )
 
 type PostgresCommentRepo struct {
-	db *sql.DB
+	db     *sql.DB
+	logger *slog.Logger
 }
 
-func NewCommentRepo(db *sql.DB) *PostgresCommentRepo {
-	return &PostgresCommentRepo{db: db}
+func NewCommentRepo(db *sql.DB, logger *slog.Logger) *PostgresCommentRepo {
+	return &PostgresCommentRepo{db: db, logger: logger}
 }
 
 func (r *PostgresCommentRepo) Insert(com domain.Comment) error {
-	create := `create TABLE if not EXISTS Comment(
-			comment_id serial primary key not null,
-			userID int not null,
-			content text,
-			imageURL varchar(255),
-			created timestamp not null,
-			postID int REFERENCES Post(id));`
 	stmt := `INSERT INTO comment (userid, content, imageurl, created, postid)
 			VALUES($1, $2, $3, $4, $5)`
 
-	_, err := r.db.Exec(create)
+	_, err := r.db.Exec(stmt, com.UserID, com.Content, com.ImageURL, com.Created, com.PostID)
 	if err != nil {
-		return err
-	}
-	_, err = r.db.Exec(stmt, com.UserID, com.Content, com.ImageURL, com.Created, com.PostID)
-	if err != nil {
+		r.logger.Error(err.Error())
 		return err
 	}
 
@@ -43,6 +35,7 @@ func (r *PostgresCommentRepo) GetCommentsByPost(id int) ([]domain.Comment, error
 
 	rows, err := r.db.Query(stmt, id)
 	if err != nil {
+		r.logger.Error(err.Error())
 		return []domain.Comment{}, err
 	}
 	defer rows.Close()
@@ -59,12 +52,14 @@ func (r *PostgresCommentRepo) GetCommentsByPost(id int) ([]domain.Comment, error
 			&c.PostID,
 		)
 		if err != nil {
+			r.logger.Error(err.Error())
 			return []domain.Comment{}, err
 		}
 		comments = append(comments, c)
 	}
 	err = rows.Err()
 	if err != nil {
+		r.logger.Error(err.Error())
 		return []domain.Comment{}, err
 	}
 	return comments, nil
@@ -79,6 +74,7 @@ func (r *PostgresCommentRepo) UpdatePostExpire(id int) error {
 
 	_, err := r.db.Exec(stmt, t, id)
 	if err != nil {
+		r.logger.Error(err.Error())
 		return err
 	}
 	return nil

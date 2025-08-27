@@ -1,34 +1,68 @@
 package service
 
 import (
-	"database/sql"
-	"errors"
-
 	"1337b04rd/internal/core/domain"
 	"1337b04rd/internal/core/ports"
+	"1337b04rd/internal/core/util"
+	"net/http"
+	"os"
+	"time"
 )
 
 type UserService struct {
-	users ports.UserRepository
-	rick  ports.RickAPI
+	repo        ports.UserRepository
+	externalApi ports.ExternalApi
 }
 
-func NewUserService(users ports.UserRepository, rick ports.RickAPI) *UserService {
-	return &UserService{users: users, rick: rick}
+func NewUserService(repo ports.UserRepository, ex ports.ExternalApi) *UserService {
+	return &UserService{repo: repo, externalApi: ex}
 }
+func (s *UserService) NewUser(r *http.Request) (string, *util.Claims, error) {
+	if err := r.ParseForm(); err != nil {
+		return "", nil, err
+	}
 
-// EnsureUser returns existing user by session or creates one with Rick&Morty avatar
-func (s *UserService) EnsureUser(sessionID string) (domain.User, error) {
-	u, err := s.users.GetBySession(sessionID)
-	if err == nil {
-		return u, nil
-	}
-	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		return domain.User{}, err
-	}
-	name, img, _, err := s.rick.RandomCharacter()
+	occupied, err := s.repo.GetOccupiedCharacters()
 	if err != nil {
-		return domain.User{}, err
+		return "", nil, err
 	}
-	return s.users.UpsertBySession(sessionID, name, img)
+
+	user, err := s.externalApi.GetRandomCharacter(occupied)
+	if err != nil {
+		return "", nil, err
+	}
+
+	if name := r.PostForm.Get("name"); name != "" {
+		user.Name = name
+	}
+
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		secret = "supersecrethahaha"
+	}
+
+	expiration := 7 * 24 * time.Hour
+
+	token, err := util.CreateJWT(user.Name, user.ImageURL, secret, expiration)
+	if err != nil {
+		return "", nil, err
+	}
+
+	// build claims that match what we encoded in JWT
+	claims := &util.Claims{
+		Username: user.Name,
+		Avatar:   user.ImageURL,
+		Exp:      time.Now().Add(expiration).Unix(),
+	}
+
+	// persist user in DB
+	if err := s.repo.NewUser(domain.User{
+		Name:      user.Name,
+		AvatarURL: user.ImageURL,
+		SessionID: token,
+	}); err != nil {
+		return "", nil, err
+	}
+
+	return token, claims, nil
 }
