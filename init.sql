@@ -1,19 +1,25 @@
-create TABLE if not exists Post(
-    id serial primary key not null,
-    title varchar(50) not null,
-    content text,
-    imageURL varchar(255),
-    userID int not null,
-    created timestamp not null,
-    expires timestamp not null
+CREATE TABLE IF NOT EXISTS Users (
+    userID serial PRIMARY KEY NOT NULL,
+    username varchar(150) NOT NULL,
+    userURL text NOT NULL,
+    userToken text NOT NULL
 );
 
-
-create TABLE if not EXISTS Comment(
-    comment_id serial primary key not null,
-    userID int not null,
+CREATE TABLE IF NOT EXISTS Post (
+    id serial PRIMARY KEY NOT NULL,
+    title varchar(50) NOT NULL,
     content text,
     imageURL varchar(255),
-    created timestamp not null,
+    created timestamp NOT NULL,
+    expires timestamp NOT NULL,
+    author varchar(150) not null,
+);
+
+CREATE TABLE IF NOT EXISTS Comment (
+    comment_id serial PRIMARY KEY NOT NULL,
+    content text,
+    imageURL varchar(255),
+    created timestamp NOT NULL,
+    userID int REFERENCES Users(userID) ON DELETE CASCADE,
     postID int REFERENCES Post(id) ON DELETE CASCADE
 );
