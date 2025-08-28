@@ -45,10 +45,10 @@ func (r *PostgresCommentRepo) GetCommentsByPost(id int) ([]domain.Comment, error
 		var c domain.Comment
 		err = rows.Scan(
 			&c.CommentID,
-			&c.UserID,
 			&c.Content,
 			&c.ImageURL,
 			&c.Created,
+			&c.UserID,
 			&c.PostID,
 		)
 		if err != nil {

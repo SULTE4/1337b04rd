@@ -19,11 +19,13 @@ func NewPostRepo(db *sql.DB, logger *slog.Logger) *PostgresPostRepo {
 
 func (r *PostgresPostRepo) Insert(p domain.Post) (int, error) {
 
-	stmt := `INSERT INTO post (title, content, imageURL, author, created, expires)
-			VALUES ($1, $2, $3, $4, $5, $6) returning id;`
+	stmt := `INSERT INTO post (title, content, imageURL, author, created, expires, userid)
+			VALUES ($1, $2, $3, $4, $5, $6, $7) returning id;`
 	id := 0
 
-	err := r.db.QueryRow(stmt, p.Title, p.Content, p.ImageURL, p.Username, p.Created, p.Expires).Scan(&id)
+	r.logger.Info("Inserting post for userID=%d", p.UserID)
+
+	err := r.db.QueryRow(stmt, p.Title, p.Content, p.ImageURL, p.Username, p.Created, p.Expires, p.UserID).Scan(&id)
 	if err != nil {
 		r.logger.Error(err.Error())
 		return 0, err
@@ -45,8 +47,8 @@ func (r *PostgresPostRepo) GetByID(id int) (domain.Post, error) {
 		&p.Created,
 		&p.Expires,
 		&p.Username,
+		&p.UserID,
 	)
-
 	if err != nil {
 		r.logger.Error(err.Error())
 		if errors.As(err, sql.ErrNoRows) {
@@ -82,6 +84,7 @@ func (r *PostgresPostRepo) GetAll() ([]domain.Post, error) {
 			&p.Created,
 			&p.Expires,
 			&p.Username,
+			&p.UserID,
 		)
 		if err != nil {
 			r.logger.Error(err.Error())
@@ -135,6 +138,7 @@ func (r *PostgresPostRepo) GetExpiredPosts() ([]domain.Post, error) {
 			&p.Created,
 			&p.Expires,
 			&p.Username,
+			&p.UserID,
 		)
 		if err != nil {
 			r.logger.Error(err.Error())

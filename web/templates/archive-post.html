@@ -1,49 +1,138 @@
-<!-- templates/archive-post.html -->
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <!-- <link rel="stylesheet" href="../static/style.css"> -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{.Post.Title}} (Archived)</title>
     <style>
-        .comment {
-            border: 1px solid #ccc;
-            padding: 10px;
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f6fb;
+            color: #333;
+        }
+
+        header {
+            text-align: center;
+            background: #2f3b52;
+            color: white;
+            padding: 20px;
+        }
+
+        header a {
+            color: #fff;
+            text-decoration: none;
+            margin: 0 10px;
+        }
+
+        main {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 15px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        .post {
+            border-bottom: 2px solid #ccc;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+
+        .post h2 {
+            margin-top: 0;
+            color: #2f3b52;
+        }
+
+        .post img {
+            max-width: 100%;
+            max-height: 400px;
+            display: block;
             margin: 10px 0;
+            border-radius: 6px;
         }
-        .comment img.avatar {
-            width: 50px;
-            vertical-align: middle;
+
+        .meta {
+            font-size: 0.9em;
+            color: #555;
+            margin-bottom: 10px;
         }
-        .comment-content {
-            display: inline-block;
-            vertical-align: middle;
-            margin-left: 10px;
+
+        .comments h2 {
+            margin-top: 30px;
+            color: #2f3b52;
+        }
+
+        .comment {
+            border: 1px solid #ddd;
+            background: #fafafa;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+
+        .comment .meta {
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .no-comments {
+            font-style: italic;
+            color: #777;
+        }
+
+        .notice {
+            text-align: center;
+            font-size: 0.9em;
+            color: #a33;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
-    <a href="/archive">Back to Archive</a>
+<header>
     <h1>{{.Post.Title}} (Archived)</h1>
-    <p>{{.Post.Content}}</p>
-    {{if .Post.ImageURL}}
-        <img src="{{.Post.ImageURL}}" alt="Post Image" style="max-width: 100%; max-height: 400px; object-fit: contain;">
-    {{end}}
-    <p>Post ID: {{.Post.ID}}</p>
-    <h2>Comments</h2>
-    <div class="comments">
-        {{range .Comments}}
-        <div class="comment">
-            <!-- remake with avater needed -->
-            <div class="comment-content">
-                <p><strong>Comment ID:</strong> {{.CommentID}}</p>
-                <!-- need image , or recheck git repo templates -->
-                <p>{{.Content}}</p>
-            </div>
+    <nav>
+        [<a href="/catalog">Catalog</a>] |
+        [<a href="/archive">Archive</a>]
+    </nav>
+</header>
+
+<main>
+    <div class="post">
+        <h2>{{.Post.Title}}</h2>
+        <div class="meta">
+            Posted by {{.Post.Username}} on {{humanDate .Post.Created}}
         </div>
-        {{else}}
-        <p>No comments available.</p>
+        <p>{{.Post.Content}}</p>
+        {{if .Post.ImageURL}}
+            <img src="{{.Post.ImageURL}}" alt="Post Image">
         {{end}}
     </div>
-<!-- Comment form is omitted since adding new comments is not allowed -->
+
+    <div class="comments">
+        <h2>Comments</h2>
+        {{range .Comments}}
+            <div class="comment">
+                <div class="meta">
+                    By {{.Username}} on {{humanDate .Created}}
+                </div>
+                <p>{{.Content}}</p>
+                {{if .ImageURL}}
+                    <img src="{{.ImageURL}}" alt="Comment Image" style="max-width:200px;max-height:200px;border-radius:4px;">
+                {{end}}
+            </div>
+        {{else}}
+            <p class="no-comments">No comments available.</p>
+        {{end}}
+    </div>
+
+    <div class="notice">
+        Comments are disabled on archived posts.
+    </div>
+</main>
 </body>
 </html>

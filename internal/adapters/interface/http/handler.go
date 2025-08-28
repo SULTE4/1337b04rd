@@ -39,6 +39,7 @@ func NewHandler(postService *service.PostService,
 func (h *Handler) Catalog(w http.ResponseWriter, r *http.Request) {
 	posts, err := h.postService.GetAll()
 	if err != nil {
+		h.logger.Error(err.Error(), slog.String("uri", r.URL.RequestURI()), slog.String("method", r.Method))
 		h.serverError(w, r, err)
 		return
 	}
@@ -50,6 +51,7 @@ func (h *Handler) Catalog(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) Archive(w http.ResponseWriter, r *http.Request) {
 	posts, err := h.postService.GetArchive()
 	if err != nil {
+		h.logger.Error(err.Error(), slog.String("uri", r.URL.RequestURI()), slog.String("method", r.Method))
 		h.serverError(w, r, err)
 		return
 	}
@@ -67,6 +69,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseMultipartForm(5 << 20)
 	if err != nil {
+		h.logger.Error(err.Error(), slog.String("uri", r.URL.RequestURI()), slog.String("method", r.Method))
 		h.serverError(w, r, err)
 		return
 	}
@@ -91,12 +94,14 @@ func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 		post.File.Exist = false
 	}
 	if err != nil {
+		h.logger.Error(err.Error(), slog.String("uri", r.URL.RequestURI()), slog.String("method", r.Method))
 		h.serverError(w, r, err)
 		return
 	}
 
-	id, err := h.postService.CreatePost(post)
+	id, err := h.postService.CreatePost(r, post)
 	if err != nil {
+		h.logger.Error(err.Error(), slog.String("uri", r.URL.RequestURI()), slog.String("method", r.Method))
 		h.serverError(w, r, err)
 		return
 	}
@@ -107,16 +112,19 @@ func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) ViewPost(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
+		h.logger.Error(err.Error(), slog.String("uri", r.URL.RequestURI()), slog.String("method", r.Method))
 		h.serverError(w, r, err)
 		return
 	}
 	p, err := h.postService.GetPost(id)
 	if err != nil {
+		h.logger.Error(err.Error(), slog.String("uri", r.URL.RequestURI()), slog.String("method", r.Method))
 		h.serverError(w, r, err)
 		return
 	}
 	comments, err := h.commentService.GetPostComments(id)
 	if err != nil {
+		h.logger.Error(err.Error(), slog.String("uri", r.URL.RequestURI()), slog.String("method", r.Method))
 		h.serverError(w, r, err)
 		return
 	}
@@ -131,18 +139,21 @@ func (h *Handler) ViewPost(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) ViewArchivePost(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
+		h.logger.Error(err.Error(), slog.String("uri", r.URL.RequestURI()), slog.String("method", r.Method))
 		h.serverError(w, r, err)
 		return
 	}
 
 	p, err := h.postService.GetArchivePost(id)
 	if err != nil {
+		h.logger.Error(err.Error(), slog.String("uri", r.URL.RequestURI()), slog.String("method", r.Method))
 		h.serverError(w, r, err)
 		return
 	}
 
 	comments, err := h.commentService.GetPostComments(id)
 	if err != nil {
+		h.logger.Error(err.Error(), slog.String("uri", r.URL.RequestURI()), slog.String("method", r.Method))
 		h.serverError(w, r, err)
 		return
 	}
@@ -165,6 +176,7 @@ func (h *Handler) ViewArchivePost(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) CreateComment(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseMultipartForm(10 << 20) // 10 MB в памяти
 	if err != nil {
+		h.logger.Error(err.Error(), slog.String("uri", r.URL.RequestURI()), slog.String("method", r.Method))
 		h.serverError(w, r, err)
 		return
 	}
@@ -172,6 +184,8 @@ func (h *Handler) CreateComment(w http.ResponseWriter, r *http.Request) {
 
 	id, err := strconv.Atoi(r.PathValue("id"))
 	if err != nil {
+		h.logger.Error(err.Error(), slog.String("uri", r.URL.RequestURI()), slog.String("method", r.Method))
+
 		h.serverError(w, r, err)
 		return
 	}
@@ -194,20 +208,24 @@ func (h *Handler) CreateComment(w http.ResponseWriter, r *http.Request) {
 		com.CommentFile.Exist = false
 	}
 	if err != nil {
+		h.logger.Error(err.Error(), slog.String("uri", r.URL.RequestURI()), slog.String("method", r.Method))
+
 		h.serverError(w, r, err)
 		return
 	}
 
-	err = h.commentService.AddComment(com)
+	err = h.commentService.AddComment(r, com)
 	if err == appErrors.ErrPostNotAvailable {
 		data := h.NewTemplateData(r)
 		data.ErrID = 403
 		data.ErrMessage = appErrors.ErrPostNotAvailable.Error()
-
+		h.logger.Error(err.Error(), slog.String("uri", r.URL.RequestURI()), slog.String("method", r.Method))
 		h.render(w, r, http.StatusNotExtended, "error.html", data)
 		return
 	}
 	if err != nil {
+		h.logger.Error(err.Error(), slog.String("uri", r.URL.RequestURI()), slog.String("method", r.Method))
+
 		h.serverError(w, r, err)
 		return
 	}
@@ -218,13 +236,14 @@ func (h *Handler) render(w http.ResponseWriter, r *http.Request, status int, pag
 	ts, ok := h.templateCache[page]
 	if !ok {
 		err := fmt.Errorf("the template %s does not exist", page)
-		h.serverError(w, r, err)
+		h.logger.Error(err.Error(), slog.String("uri", r.URL.RequestURI()), slog.String("method", r.Method))
 		return
 	}
 	var buf bytes.Buffer
 
 	err := ts.ExecuteTemplate(&buf, page, data)
 	if err != nil {
+		h.logger.Error(err.Error(), slog.String("uri", r.URL.RequestURI()), slog.String("method", r.Method))
 		h.serverError(w, r, err)
 		return
 	}
@@ -235,16 +254,10 @@ func (h *Handler) render(w http.ResponseWriter, r *http.Request, status int, pag
 }
 
 func (h *Handler) serverError(w http.ResponseWriter, r *http.Request, err error) {
-	var (
-		method = r.Method
-		uri    = r.URL.RequestURI()
-	)
-
-	h.logger.Error(err.Error(), slog.String("uri", uri), slog.String("method", method))
 	data := h.NewTemplateData(r)
 
 	isCustomErr := appErrors.CustomError(err)
-
+	fmt.Println(isCustomErr)
 	data.ErrID = isCustomErr.ErrID
 	data.ErrMessage = isCustomErr.Message.Error()
 	h.render(w, r, http.StatusBadRequest, "error.html", data)

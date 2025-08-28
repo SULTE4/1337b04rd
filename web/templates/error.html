@@ -1,12 +1,60 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Error {{.ErrID}}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #E6E9F5;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+        }
+
+        .error-box {
+            background: #fff;
+            border-radius: 8px;
+            padding: 30px 40px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            max-width: 500px;
+            width: 90%;
+        }
+
+        h1 {
+            color: #c0392b;
+            margin-bottom: 15px;
+        }
+
+        p {
+            margin-bottom: 20px;
+            color: #555;
+        }
+
+        a {
+            margin: 0 10px;
+            text-decoration: none;
+            color: #2980b9;
+            font-weight: bold;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
-    <h1>Error {{.ErrID}} - {{.ErrMessage}}</h1>
-    <p>Sorry, an error has occurred.</p>
-    <a href="javascript:history.back()">Go Back</a> |
-    <a href="/catalog">Return to Home Page</a>
+    <div class="error-box">
+        <h1>Error {{.ErrID}} - {{.ErrMessage}}</h1>
+        <p>Sorry, an error has occurred.</p>
+        <a href="javascript:history.back()">⬅ Go Back</a> |
+        <a href="/catalog">🏠 Return to Home Page</a>
+    </div>
 </body>
 </html>

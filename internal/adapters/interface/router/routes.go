@@ -8,7 +8,7 @@ import (
 func NewRouter(handler *ihttp.Handler) http.Handler {
 	router := http.NewServeMux()
 
-	// not sure at this aproach to handle image datas like this do mind if you change ?
+	// not sure at this aproach to handle image datas like this do you mind if you change ?
 	router.Handle("/postsImg/", http.StripPrefix("/postsImg/",
 		http.FileServer(http.Dir("./s3_storage/postsImg"))))
 

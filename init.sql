@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS Post (
     created timestamp NOT NULL,
     expires timestamp NOT NULL,
     author varchar(150) not null,
+    userID int REFERENCES Users(userID)
 );
 
 CREATE TABLE IF NOT EXISTS Comment (

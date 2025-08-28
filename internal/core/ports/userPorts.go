@@ -6,5 +6,9 @@ import (
 
 type UserRepository interface {
 	GetOccupiedCharacters() ([]int, error)
-	NewUser(user domain.User) error
+	NewUser(user domain.User) (int, error)
+	GetUserByID(id int) (domain.User, error)
+	GetUserByToken(token string) (domain.User, error)
+	UpdateName(userID int, newName string) error
+	UpdateUserToken(userId int, token string) error
 }

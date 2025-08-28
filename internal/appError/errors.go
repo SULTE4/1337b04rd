@@ -16,12 +16,20 @@ func (e *AppError) Error() string {
 }
 
 var (
-	ErrPostNotAvailable = errors.New("post already not available")
-	ErrFileTooLarge     = errors.New("file too large")
+	ErrPostNotAvailable        = errors.New("post already not available")
+	ErrFileTooLarge            = errors.New("file too large")
+	ErrTitleOutOfRange         = errors.New("title must be less than 50 characters")
+	ErrTitleTooShort           = errors.New("title must be at least 3 characters")
+	ErrContentShouldNotBeEmpty = errors.New("content should not be empty")
+	ErrContentOutOfRange       = errors.New("content must be less than 500 characters")
 
 	allCustomErrors = []AppError{
 		{http.StatusBadRequest, ErrPostNotAvailable},
 		{http.StatusRequestEntityTooLarge, ErrFileTooLarge},
+		{http.StatusBadRequest, ErrTitleOutOfRange},
+		{http.StatusBadRequest, ErrTitleTooShort},
+		{http.StatusBadRequest, ErrContentShouldNotBeEmpty},
+		{http.StatusBadRequest, ErrContentOutOfRange},
 	}
 )
 

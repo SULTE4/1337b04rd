@@ -1,1 +1,1 @@
-package cfg
+package config

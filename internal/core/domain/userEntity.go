@@ -3,6 +3,7 @@ package domain
 import "time"
 
 type User struct {
+	UserID    int
 	SessionID string // cookie session id
 	Name      string
 	AvatarURL string

@@ -54,8 +54,8 @@ func NewApplication(dsn string, logger slog.Logger) (*Application, error) {
 	externalApi := external.NewRandMApi(logger)
 
 	// Init Domain Services
-	postService := service.NewPostService(store.PostRepo, s3Storage)
-	commentService := service.NewCommentService(store.CommentRepo, s3Storage)
+	postService := service.NewPostService(store.PostRepo, store.UserRepo, s3Storage)
+	commentService := service.NewCommentService(store.CommentRepo, store.UserRepo, s3Storage)
 	userService := service.NewUserService(store.UserRepo, externalApi)
 
 	// Init Handlers

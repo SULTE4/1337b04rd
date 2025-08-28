@@ -6,12 +6,14 @@ import (
 )
 
 type Comment struct {
-	CommentID int
-	UserID    int
-	PostID    int
-	Content   string
-	ImageURL  string
-	Created   time.Time
+	CommentID  int
+	UserID     int
+	PostID     int
+	Content    string
+	ImageURL   string
+	Created    time.Time
+	Username   string
+	UserAvatar string
 }
 
 type CreateCommentForm struct {

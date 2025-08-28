@@ -1,6 +1,7 @@
 package s3
 
 import (
+	"1337b04rd/internal/appError"
 	"errors"
 	"fmt"
 	"io"
@@ -53,7 +54,7 @@ func validateFile(f FileType) error {
 	}
 
 	if f.Handler.Size > int64(maxFileSize) {
-		return fmt.Errorf("file too large: %d bytes (limit %d)", f.Handler.Size, maxFileSize)
+		return appError.ErrFileTooLarge
 	}
 
 	// Check type

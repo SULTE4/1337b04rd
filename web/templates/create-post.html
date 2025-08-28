@@ -14,58 +14,114 @@
 
         header {
             text-align: center;
+            padding: 20px;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: #333;
+            margin: 0 10px;
+            font-weight: bold;
         }
 
         main {
             display: flex;
             justify-content: center;
+            padding: 30px;
+        }
+
+        .postForm {
+            background: #fff;
+            border-radius: 10px;
+            padding: 20px 30px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .postForm td {
+            padding: 10px;
+            vertical-align: top;
+        }
+
+        input[type="text"], textarea, input[type="file"] {
+            width: 100%;
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        input[type="submit"] {
+            background-color: #4a67d6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #354ab8;
+        }
+
+        /* Restrict uploaded file preview if you later add JS to show it */
+        img.preview {
+            max-width: 400px;
+            max-height: 300px;
+            margin-top: 10px;
+            border-radius: 6px;
+            display: block;
         }
     </style>
 </head>
 <body>
 <header>
     <h1>Create a New Post</h1>
-
     <nav>
-        <!-- Navigation links -->
         [<a href="/catalog">Catalog</a>] |
         [<a href="/archive">Archive</a>]
     </nav>
-    <br>
 </header>
+
 <main>
     <form action="/submit-post" method="POST" enctype="multipart/form-data">
         <table class="postForm">
             <tbody>
-            <tr>
-                <td>Name</td>
-                <td>
-                    <input name="name" type="text" placeholder="Anonymous">
-                </td>
-            </tr>
-            <tr>
-                <td>Subject</td>
-                <td>
-                    <input name="subject" type="text">
-                </td>
-            </tr>
-            <tr>
-                <td>Comment</td>
-                <td>
-                    <textarea name="comment" cols="48" rows="4" placeholder="Write your post here..."></textarea>
-                </td>
-            </tr>
-            <tr>
-                <td>File</td>
-                <td>
-                    <input name="file" type="file">
-                </td>
-            </tr>
-            <tr>
-                <td colspan="2">
-                    <input type="submit" value="Post">
-                </td>
-            </tr>
+                <tr>
+                    <td>Name</td>
+                    <td>
+                        <input name="name" type="text" placeholder="Anonymous">
+                    </td>
+                </tr>
+                <tr>
+                    <td>Subject</td>
+                    <td>
+                        <input name="subject" type="text" placeholder="Subject of your post">
+                    </td>
+                </tr>
+                <tr>
+                    <td>Comment</td>
+                    <td>
+                        <textarea name="comment" cols="48" rows="4" placeholder="Write your post here..."></textarea>
+                    </td>
+                </tr>
+                <tr>
+                    <td>File</td>
+                    <td>
+                        <input name="file" type="file" accept="image/*">
+                        <!-- If later: <img id="preview" class="preview"> -->
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="text-align: center;">
+                        <input type="submit" value="Post">
+                    </td>
+                </tr>
             </tbody>
         </table>
     </form>

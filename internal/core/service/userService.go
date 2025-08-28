@@ -43,26 +43,41 @@ func (s *UserService) NewUser(r *http.Request) (string, *util.Claims, error) {
 
 	expiration := 7 * 24 * time.Hour
 
-	token, err := util.CreateJWT(user.Name, user.ImageURL, secret, expiration)
-	if err != nil {
-		return "", nil, err
-	}
-
-	// build claims that match what we encoded in JWT
-	claims := &util.Claims{
-		Username: user.Name,
-		Avatar:   user.ImageURL,
-		Exp:      time.Now().Add(expiration).Unix(),
-	}
-
-	// persist user in DB
-	if err := s.repo.NewUser(domain.User{
+	var userID int
+	if userID, err = s.repo.NewUser(domain.User{
 		Name:      user.Name,
 		AvatarURL: user.ImageURL,
-		SessionID: token,
 	}); err != nil {
 		return "", nil, err
 	}
 
+	token, err := util.CreateJWT(user.Name, user.ImageURL, secret, userID, expiration)
+	if err != nil {
+		return "", nil, err
+	}
+
+	if err := s.repo.UpdateUserToken(userID, token); err != nil {
+		return "", nil, err
+	}
+
+	claims := &util.Claims{
+		UserID:   userID,
+		Username: user.Name,
+		Avatar:   user.ImageURL,
+		Exp:      time.Now().Add(expiration).Unix(),
+	}
 	return token, claims, nil
+}
+
+func (s *UserService) GetUserIDByToken(token string) (int, error) {
+	userData, err := s.repo.GetUserByToken(token)
+	if err != nil {
+		return 0, err
+	}
+
+	return userData.UserID, nil
+}
+
+func (s *UserService) UpdateUsername(id int, newName string) error {
+	return s.repo.UpdateName(id, newName)
 }

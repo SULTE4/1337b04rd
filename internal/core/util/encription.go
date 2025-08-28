@@ -19,6 +19,7 @@ type Header struct {
 }
 
 type Claims struct {
+	UserID   int    `json:"user_id"`
 	Username string `json:"username"`
 	Avatar   string `json:"avatar"`
 	Exp      int64  `json:"exp"`
@@ -38,9 +39,10 @@ func base64URLDecode(s string) ([]byte, error) {
 }
 
 // create JWT
-func CreateJWT(username, avatar, secret string, duration time.Duration) (string, error) {
+func CreateJWT(username, avatar, secret string, userID int, duration time.Duration) (string, error) {
 	header := Header{"HS256", "JWT"}
 	claims := Claims{
+		UserID:   userID,
 		Username: username,
 		Avatar:   avatar,
 		Exp:      time.Now().Add(duration).Unix(),
@@ -97,21 +99,4 @@ func VerifyJWT(token, secret string) (*Claims, error) {
 	}
 
 	return &claims, nil
-}
-
-// demo
-func main() {
-	secret := "supersecrethahaha"
-
-	// create
-	token, _ := CreateJWT("user42", "rick.png", secret, time.Minute*5)
-	fmt.Println("JWT:", token)
-
-	// verify
-	claims, err := VerifyJWT(token, secret)
-	if err != nil {
-		fmt.Println("Error:", err)
-	} else {
-		fmt.Printf("Verified claims: %+v\n", claims)
-	}
 }

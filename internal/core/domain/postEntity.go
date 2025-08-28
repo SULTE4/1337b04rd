@@ -6,13 +6,15 @@ import (
 )
 
 type Post struct {
-	ID       int
-	Title    string
-	Content  string
-	ImageURL string
-	Username string
-	Created  time.Time
-	Expires  time.Time
+	ID         int
+	Title      string
+	Content    string
+	ImageURL   string
+	Username   string
+	Created    time.Time
+	Expires    time.Time
+	UserID     int
+	UserAvatar string
 }
 
 type CreatePostForm struct {
@@ -22,7 +24,7 @@ type CreatePostForm struct {
 	File    s3.FileType
 }
 
-func NewPost(title, content, imageURL string, username string) *Post {
+func NewPost(title, content, imageURL, username string, userid int) *Post {
 	t := time.Now().UTC()
 	return &Post{
 		Title:    title,
@@ -31,5 +33,6 @@ func NewPost(title, content, imageURL string, username string) *Post {
 		Username: username,
 		Created:  t,
 		Expires:  t.Add(time.Minute * 10),
+		UserID:   userid,
 	}
 }
