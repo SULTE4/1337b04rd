@@ -131,6 +131,13 @@
         .catalog-link a:hover {
             background: #2C3E91;
         }
+        .post .content .text,
+        .comment .content .text {
+            word-wrap: break-word;
+            overflow-wrap: anywhere;
+            white-space: pre-wrap;
+        }
+
     </style>
     <script>
         function setReply(parentId) {
@@ -170,7 +177,7 @@
             <li class="comment">
                 <div class="header">
                     <img src="{{.UserAvatar}}" alt="avatar" width="30px" height="30px">
-                    {{humanDate .Created}} • #{{.CommentID}} • {{.Username}}
+                    {{humanDate .Created}} • {{.Username}}
                     <a href="javascript:setReply({{.CommentID}})" class="reply-link">Reply</a>
                 </div>
                 <div class="content">
