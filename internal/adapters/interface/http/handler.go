@@ -131,7 +131,6 @@ func (h *Handler) ViewPost(w http.ResponseWriter, r *http.Request) {
 	data := h.NewTemplateData(r)
 	data.Post = p
 	data.Comments = comments
-
 	h.render(w, r, http.StatusOK, "post.html", data)
 }
 

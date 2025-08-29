@@ -80,7 +80,7 @@ func (h *Handler) TokenMiddleware(next http.Handler) http.Handler {
 			if r.URL.Path == "/submit-post" {
 				if err := r.ParseMultipartForm(10 << 20); err == nil {
 					newName := r.FormValue("name")
-					if newName != claims.Username {
+					if newName != "" && newName != claims.Username {
 						err := h.userService.UpdateUsername(claims.UserID, newName)
 						if err != nil {
 							h.logger.Error(err.Error())
