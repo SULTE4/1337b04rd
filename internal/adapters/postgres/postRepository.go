@@ -20,7 +20,7 @@ func (r *PostgresPostRepo) Insert(p domain.Post) (int, error) {
 			VALUES ($1, $2, $3, $4, $5, $6, $7) returning id;`
 	id := 0
 
-	r.logger.Info("Inserting post for userID=%d", p.UserID)
+	r.logger.Info("Inserting post for userID=%d", slog.Int("userID", p.UserID))
 
 	err := r.db.QueryRow(stmt, p.Title, p.Content, p.ImageURL, p.Username, p.Created, p.Expires, p.UserID).Scan(&id)
 	if err != nil {
