@@ -20,7 +20,8 @@ CREATE TABLE IF NOT EXISTS Comment (
     comment_id serial PRIMARY KEY NOT NULL,
     content text,
     imageURL varchar(255),
-    created timestamp NOT NULL,
+    created timestamp NOT NULL DEFAULT NOW(),
     userID int REFERENCES Users(userID) ON DELETE CASCADE,
-    postID int REFERENCES Post(id) ON DELETE CASCADE
+    postID int REFERENCES Post(id) ON DELETE CASCADE,
+    parentID int REFERENCES Comment(comment_id) ON DELETE CASCADE
 );

@@ -46,6 +46,7 @@ func (r *PostgresUserRepo) GetOccupiedCharacters() ([]int, error) {
 
 	return occupied, nil
 }
+
 func (r *PostgresUserRepo) NewUser(user domain.User) (int, error) {
 	stmt := `INSERT INTO users (username, userurl, usertoken) VALUES ($1, $2, $3) returning userid`
 	var id int
@@ -75,6 +76,7 @@ func (r *PostgresUserRepo) GetUserByID(id int) (domain.User, error) {
 	}
 	return user, nil
 }
+
 func (r *PostgresUserRepo) GetUserByToken(token string) (domain.User, error) {
 	stmt := `SELECT userID, username, userURL, userToken FROM users WHERE userToken = $1`
 
@@ -105,7 +107,7 @@ func (r *PostgresUserRepo) UpdateName(id int, newName string) error {
 	_, err := r.db.Exec(stmt, newName, id)
 	if err != nil {
 
-		r.logger.Error(err.Error(), "not okay in User repo update name")
+		r.logger.Error(err.Error(), slog.String("comment=", "not okay in User repo update name"))
 		return err
 	}
 
@@ -121,9 +123,22 @@ func (r *PostgresUserRepo) UpdateUserToken(id int, token string) error {
 	_, err := r.db.Exec(stmt, token, id)
 	if err != nil {
 
-		r.logger.Error(err.Error(), "not okay in User repo update token")
+		r.logger.Error(err.Error(), slog.String("comment=", "not okay in User repo update token"))
 		return err
 	}
 
 	return nil
+}
+
+func (r *PostgresUserRepo) Exists(id int) (bool, error) {
+	stmt := `SELECT EXISTS(SELECT 1 FROM users WHERE userid = $1)`
+
+	var exists bool
+	err := r.db.QueryRow(stmt, id).Scan(&exists)
+	if err != nil {
+		r.logger.Error(err.Error())
+		return false, err
+	}
+
+	return exists, nil
 }

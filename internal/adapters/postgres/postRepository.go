@@ -3,8 +3,6 @@ package postgres
 import (
 	"1337b04rd/internal/core/domain"
 	"database/sql"
-	"errors"
-	"fmt"
 	"log/slog"
 )
 
@@ -18,7 +16,6 @@ func NewPostRepo(db *sql.DB, logger *slog.Logger) *PostgresPostRepo {
 }
 
 func (r *PostgresPostRepo) Insert(p domain.Post) (int, error) {
-
 	stmt := `INSERT INTO post (title, content, imageURL, author, created, expires, userid)
 			VALUES ($1, $2, $3, $4, $5, $6, $7) returning id;`
 	id := 0
@@ -51,9 +48,6 @@ func (r *PostgresPostRepo) GetByID(id int) (domain.Post, error) {
 	)
 	if err != nil {
 		r.logger.Error(err.Error())
-		if errors.As(err, sql.ErrNoRows) {
-			return domain.Post{}, fmt.Errorf("invalid post id: %d", id)
-		}
 		return domain.Post{}, err
 	}
 	return p, nil

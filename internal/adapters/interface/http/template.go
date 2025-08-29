@@ -13,7 +13,7 @@ import (
 type templateData struct {
 	Post       domain.Post
 	Posts      []domain.Post
-	Comments   []domain.Comment
+	Comments   []*domain.Comment
 	ErrID      int
 	ErrMessage string
 }

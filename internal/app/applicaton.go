@@ -1,16 +1,16 @@
 package app
 
 import (
+	"1337b04rd/internal/adapters/external"
+	"1337b04rd/internal/adapters/interface/router"
+	"1337b04rd/internal/adapters/s3"
+	"1337b04rd/internal/core/service"
 	"database/sql"
 	"log/slog"
 	"net/http"
 	"os"
 
-	"1337b04rd/internal/adapters/external"
 	ihttp "1337b04rd/internal/adapters/interface/http"
-	"1337b04rd/internal/adapters/interface/router"
-	"1337b04rd/internal/adapters/s3"
-	"1337b04rd/internal/core/service"
 )
 
 type Application struct {
@@ -21,7 +21,6 @@ type Application struct {
 }
 
 func NewApplication(dsn string, logger slog.Logger) (*Application, error) {
-
 	// Connect DB
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {

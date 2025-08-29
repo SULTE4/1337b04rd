@@ -12,8 +12,7 @@ import (
 	"strings"
 )
 
-type S3Repo struct {
-}
+type S3Repo struct{}
 
 func NewS3Repo() (*S3Repo, error) {
 	return &S3Repo{}, initS3()
@@ -39,7 +38,7 @@ func initS3() error {
 	for _, b := range buckets {
 		path := filepath.Join(directoryPath, b)
 		if _, err := os.Stat(path); os.IsNotExist(err) {
-			if err := os.MkdirAll(path, 0755); err != nil {
+			if err := os.MkdirAll(path, 0o755); err != nil {
 				return err
 			}
 			slog.Info("bucket created", "bucket", b)
@@ -74,7 +73,6 @@ func validateFile(f FileType) error {
 }
 
 func (r *S3Repo) UploadObject(isPostImg bool, f FileType) (string, error) {
-
 	if !f.Exist {
 		return "", nil
 	}

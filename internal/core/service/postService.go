@@ -27,8 +27,7 @@ func (s *PostService) CreatePost(r *http.Request, p domain.CreatePostForm) (int,
 	}
 
 	userid := r.Context().Value("user").(int)
-	fmt.Println(userid)
-	// add handle to empty data in post form
+
 	if util.MaxChars(p.Subject, 50) {
 		return 0, appError.ErrTitleOutOfRange
 	}
@@ -54,7 +53,6 @@ func (s *PostService) CreatePost(r *http.Request, p domain.CreatePostForm) (int,
 
 func (s *PostService) GetPost(id int) (domain.Post, error) {
 	p, err := s.repo.GetByID(id)
-
 	if err != nil {
 		return domain.Post{}, err
 	}
@@ -95,5 +93,4 @@ func (s *PostService) GetArchivePost(id int) (domain.Post, error) {
 		return domain.Post{}, fmt.Errorf("post is not expired: %d", id)
 	}
 	return p, nil
-
 }

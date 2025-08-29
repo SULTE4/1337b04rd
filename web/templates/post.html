@@ -48,7 +48,7 @@
         }
 
         .post .content img {
-            width: 300px;
+            max-width: 300px;
             border-radius: 5px;
         }
 
@@ -69,6 +69,11 @@
             margin-bottom: 15px;
         }
 
+        .reply {
+            margin-left: 40px; /* indent replies */
+            background: #F0F4FF;
+        }
+
         .comment .header {
             display: flex;
             align-items: center;
@@ -84,9 +89,13 @@
         }
 
         .comment .content img {
-            width: 100px;
-            height: 100px;
+            max-width: 100px;
             border-radius: 5px;
+        }
+
+        .reply-link {
+            font-size: 12px;
+            margin-left: auto;
         }
 
         .add-comment {
@@ -123,6 +132,12 @@
             background: #2C3E91;
         }
     </style>
+    <script>
+        function setReply(parentId) {
+            document.getElementById("parent_id").value = parentId;
+            document.getElementById("replying-to").innerText = "Replying to Comment #" + parentId;
+        }
+    </script>
 </head>
 <body>
 <header>
@@ -133,7 +148,7 @@
     <div class="post">
         <div class="header">
             <img src="{{.Post.UserAvatar}}" alt="avatar" width="50px" height="50px">
-            {{humanDate .Post.Created}} • {{.Post.ID}} • {{.Post.Username}}
+            {{humanDate .Post.Created}} • Post #{{.Post.ID}} • {{.Post.Username}}
         </div>
         <div class="content">
             {{if .Post.ImageURL}}
@@ -155,7 +170,8 @@
             <li class="comment">
                 <div class="header">
                     <img src="{{.UserAvatar}}" alt="avatar" width="30px" height="30px">
-                    {{humanDate .Created}} • {{.Username}}
+                    {{humanDate .Created}} • #{{.CommentID}} • {{.Username}}
+                    <a href="javascript:setReply({{.CommentID}})" class="reply-link">Reply</a>
                 </div>
                 <div class="content">
                     {{if .ImageURL}}
@@ -167,6 +183,30 @@
                         <p>{{.Content}}</p>
                     </div>
                 </div>
+
+                <!-- Replies -->
+                {{if .Replies}}
+                <ul class="comment-list">
+                    {{range .Replies}}
+                    <li class="comment reply">
+                        <div class="header">
+                            <img src="{{.UserAvatar}}" alt="avatar" width="30px" height="30px">
+                            {{humanDate .Created}} • #{{.CommentID}} • {{.Username}}
+                        </div>
+                        <div class="content">
+                            {{if .ImageURL}}
+                            <a href="{{.ImageURL}}">
+                                <img src="{{.ImageURL}}" alt="reply image">
+                            </a>
+                            {{end}}
+                            <div class="text">
+                                <p>{{.Content}}</p>
+                            </div>
+                        </div>
+                    </li>
+                    {{end}}
+                </ul>
+                {{end}}
             </li>
             {{end}}
         </ul>
@@ -175,7 +215,9 @@
     <!-- Add Comment -->
     <div class="add-comment">
         <h3>Add a Comment</h3>
+        <p id="replying-to"></p>
         <form action="/submit-comment/{{.Post.ID}}" method="POST" enctype="multipart/form-data">
+            <input type="hidden" name="parent_id" id="parent_id" value="">
             <textarea name="comment" placeholder="Write your comment here..."></textarea>
             <br>
             <input name="file" type="file">

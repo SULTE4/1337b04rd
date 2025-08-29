@@ -49,9 +49,26 @@ func (h *Handler) TokenMiddleware(next http.Handler) http.Handler {
 				}
 				claims = newClaims
 				setTokenCookie(w, token)
+			} else {
+				exists, err := h.userService.Exists(claims.UserID)
+				if err != nil {
+					h.logger.Error(err.Error())
+					fmt.Print(1)
+					h.serverError(w, r, err)
+					return
+				}
+				if !exists {
+					token, newClaims, err := h.userService.NewUser(r)
+					if err != nil {
+						h.logger.Error(err.Error())
+						h.serverError(w, r, err)
+						return
+					}
+					claims = newClaims
+					setTokenCookie(w, token)
+				}
 			}
 		}
-
 		// claims.UserID, err = h.userService.GetUserIDByToken(cookie.Value)
 		// if err != nil {
 		// 	h.logger.Error(err.Error())
@@ -59,7 +76,6 @@ func (h *Handler) TokenMiddleware(next http.Handler) http.Handler {
 		// 	return
 		// }
 
-		fmt.Println("lahaha", claims)
 		if r.Method == http.MethodPost {
 			if r.URL.Path == "/submit-post" {
 				if err := r.ParseMultipartForm(10 << 20); err == nil {

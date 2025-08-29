@@ -1,6 +1,7 @@
 package appError
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"net/http"
@@ -35,6 +36,12 @@ var (
 
 func CustomError(e error) *AppError {
 	for _, customErr := range allCustomErrors {
+		if errors.Is(e, sql.ErrNoRows) {
+			return &AppError{
+				ErrID:   http.StatusNotFound,
+				Message: errors.New(http.StatusText(http.StatusNotFound)),
+			}
+		}
 		if errors.Is(e, customErr.Message) {
 			// return &AppError{
 			// 	ErrID:   customErr.ErrID,

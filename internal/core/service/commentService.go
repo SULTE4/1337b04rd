@@ -4,7 +4,7 @@ import (
 	"1337b04rd/internal/appError"
 	"1337b04rd/internal/core/domain"
 	"1337b04rd/internal/core/ports"
-	"fmt"
+	"1337b04rd/internal/core/util"
 	"net/http"
 )
 
@@ -19,11 +19,17 @@ func NewCommentService(repo ports.CommentRepository, userR ports.UserRepository,
 }
 
 func (c *CommentService) AddComment(r *http.Request, com domain.CreateCommentForm) error {
+	if util.MinChars(com.Comment, 1) {
+		return appError.ErrContentShouldNotBeEmpty
+	}
+	if util.MaxChars(com.Comment, 500) {
+		return appError.ErrContentOutOfRange
+	}
+
 	is, err := c.repo.IsPostExpired(com.PostID)
 	if err != nil {
 		return err
 	}
-
 	if is {
 		return appError.ErrPostNotAvailable
 	}
@@ -34,36 +40,54 @@ func (c *CommentService) AddComment(r *http.Request, com domain.CreateCommentFor
 	}
 
 	userid := r.Context().Value("user").(int)
-	fmt.Println(userid)
-	comment := domain.NewComment(userid, com.PostID, com.Comment, imageUrl)
 
-	err = c.repo.Insert(comment)
-	if err != nil {
+	comment := domain.NewComment(userid, com.PostID, com.ParentID, com.Comment, imageUrl)
+
+	if err := c.repo.Insert(comment); err != nil {
 		return err
 	}
-	err = c.repo.UpdatePostExpire(com.PostID)
-	if err != nil {
+
+	if err := c.repo.UpdatePostExpire(com.PostID); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (c *CommentService) GetPostComments(id int) ([]domain.Comment, error) {
+func (c *CommentService) GetPostComments(id int) ([]*domain.Comment, error) {
 	comments, err := c.repo.GetCommentsByPost(id)
-	for i, comment := range comments {
-		userData, err := c.userR.GetUserByID(comment.UserID)
-		if err != nil {
-			return []domain.Comment{}, err
-		}
+	if err != nil {
+		return nil, err
+	}
 
+	for i := range comments {
+		userData, err := c.userR.GetUserByID(comments[i].UserID)
+		if err != nil {
+			return nil, err
+		}
 		comments[i].Username = userData.Name
 		comments[i].UserAvatar = userData.AvatarURL
 	}
 
-	if err != nil {
-		return []domain.Comment{}, err
+	commentMap := make(map[int]*domain.Comment)
+	var roots []*domain.Comment
+
+	for i := range comments {
+		comment := &comments[i]
+		comment.Replies = []*domain.Comment{} // ensure non-nil slice
+		commentMap[comment.CommentID] = comment
 	}
 
-	return comments, nil
+	for i := range comments {
+		comment := &comments[i]
+		if comment.ParentID != nil {
+			if parent, ok := commentMap[*comment.ParentID]; ok {
+				parent.Replies = append(parent.Replies, comment)
+			}
+		} else {
+			roots = append(roots, comment)
+		}
+	}
+
+	return roots, nil
 }

@@ -25,8 +25,8 @@ func NewHandler(postService *service.PostService,
 	commentService *service.CommentService,
 	userService *service.UserService,
 	templateCache map[string]*template.Template,
-	logger *slog.Logger) *Handler {
-
+	logger *slog.Logger,
+) *Handler {
 	return &Handler{
 		postService:    postService,
 		commentService: commentService,
@@ -106,7 +106,6 @@ func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.Redirect(w, r, fmt.Sprintf("/post/%d", id), http.StatusSeeOther)
-
 }
 
 func (h *Handler) ViewPost(w http.ResponseWriter, r *http.Request) {
@@ -163,7 +162,6 @@ func (h *Handler) ViewArchivePost(w http.ResponseWriter, r *http.Request) {
 	data.Comments = comments
 
 	h.render(w, r, http.StatusOK, "archive-post.html", data)
-
 }
 
 // func (h *Handler) Error(w http.ResponseWriter, r *http.Response, errId int, message string) {
@@ -194,7 +192,20 @@ func (h *Handler) CreateComment(w http.ResponseWriter, r *http.Request) {
 
 	com.Comment = r.PostForm.Get("comment")
 	com.PostID = id
+	parentStr := r.PostForm.Get("parent_id")
+	if parentStr != "" {
+		pid, err := strconv.Atoi(parentStr)
+		if err != nil {
+			h.logger.Error(err.Error(), slog.String("uri", r.URL.RequestURI()), slog.String("method", r.Method))
+			h.serverError(w, r, err)
+			return
+		}
+		com.ParentID = &pid
+	} else {
+		com.ParentID = nil
+	}
 
+	fmt.Println(com.ParentID)
 	file, handler, err := r.FormFile("file")
 
 	com.CommentFile = s3.FileType{
@@ -250,14 +261,12 @@ func (h *Handler) render(w http.ResponseWriter, r *http.Request, status int, pag
 
 	w.WriteHeader(status)
 	_, _ = buf.WriteTo(w)
-
 }
 
 func (h *Handler) serverError(w http.ResponseWriter, r *http.Request, err error) {
 	data := h.NewTemplateData(r)
 
 	isCustomErr := appErrors.CustomError(err)
-	fmt.Println(isCustomErr)
 	data.ErrID = isCustomErr.ErrID
 	data.ErrMessage = isCustomErr.Message.Error()
 	h.render(w, r, http.StatusBadRequest, "error.html", data)

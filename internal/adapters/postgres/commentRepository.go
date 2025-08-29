@@ -17,15 +17,21 @@ func NewCommentRepo(db *sql.DB, logger *slog.Logger) *PostgresCommentRepo {
 }
 
 func (r *PostgresCommentRepo) Insert(com domain.Comment) error {
-	stmt := `INSERT INTO comment (userid, content, imageurl, created, postid)
-			VALUES($1, $2, $3, $4, $5)`
+	stmt := `INSERT INTO comment (userid, content, imageurl, created, postid, parentid)
+	         VALUES($1, $2, $3, $4, $5, $6)`
 
-	_, err := r.db.Exec(stmt, com.UserID, com.Content, com.ImageURL, com.Created, com.PostID)
+	var parent interface{}
+	if com.ParentID == nil { // no parent → top-level comment
+		parent = nil
+	} else {
+		parent = *com.ParentID // reply → actual parentID
+	}
+
+	_, err := r.db.Exec(stmt, com.UserID, com.Content, com.ImageURL, com.Created, com.PostID, parent)
 	if err != nil {
 		r.logger.Error(err.Error())
 		return err
 	}
-
 	return nil
 }
 
@@ -50,6 +56,7 @@ func (r *PostgresCommentRepo) GetCommentsByPost(id int) ([]domain.Comment, error
 			&c.Created,
 			&c.UserID,
 			&c.PostID,
+			&c.ParentID,
 		)
 		if err != nil {
 			r.logger.Error(err.Error())

@@ -17,6 +17,7 @@ type UserService struct {
 func NewUserService(repo ports.UserRepository, ex ports.ExternalApi) *UserService {
 	return &UserService{repo: repo, externalApi: ex}
 }
+
 func (s *UserService) NewUser(r *http.Request) (string, *util.Claims, error) {
 	if err := r.ParseForm(); err != nil {
 		return "", nil, err
@@ -80,4 +81,8 @@ func (s *UserService) GetUserIDByToken(token string) (int, error) {
 
 func (s *UserService) UpdateUsername(id int, newName string) error {
 	return s.repo.UpdateName(id, newName)
+}
+
+func (s *UserService) Exists(id int) (bool, error) {
+	return s.repo.Exists(id)
 }
