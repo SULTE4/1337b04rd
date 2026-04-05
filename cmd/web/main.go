@@ -1,7 +1,6 @@
 package main
 
 import (
-	"1337b04rd/internal/app"
 	"flag"
 	"fmt"
 	"log"
@@ -10,15 +9,10 @@ import (
 	"os"
 	"time"
 
+	"1337b04rd/internal/app"
+
 	_ "github.com/lib/pq"
 )
-
-/*	TODO
-	cookie,
-	config (optional),
-	user authentication
-
-*/
 
 func main() {
 	addr := flag.String("port", "8080", "Port number.")
@@ -47,6 +41,7 @@ func main() {
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
 		AddSource: true,
 	}))
+	slog.SetDefault(logger)
 
 	app, err := app.NewApplication(dsn, *logger)
 	if err != nil {

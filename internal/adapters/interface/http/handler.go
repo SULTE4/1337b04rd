@@ -1,10 +1,9 @@
 package http
 
 import (
-	"1337b04rd/internal/adapters/s3"
 	appErrors "1337b04rd/internal/appError"
 	"1337b04rd/internal/core/domain"
-	"1337b04rd/internal/core/service"
+	"1337b04rd/internal/core/ports"
 	"bytes"
 	"fmt"
 	"log/slog"
@@ -14,16 +13,16 @@ import (
 )
 
 type Handler struct {
-	postService    *service.PostService
-	userService    *service.UserService
-	commentService *service.CommentService
+	postService    ports.PostService
+	userService    ports.UserService
+	commentService ports.CommentService
 	templateCache  map[string]*template.Template
 	logger         *slog.Logger
 }
 
-func NewHandler(postService *service.PostService,
-	commentService *service.CommentService,
-	userService *service.UserService,
+func NewHandler(postService ports.PostService,
+	commentService ports.CommentService,
+	userService ports.UserService,
 	templateCache map[string]*template.Template,
 	logger *slog.Logger,
 ) *Handler {
@@ -83,7 +82,7 @@ func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 
 	file, handler, err := r.FormFile("file")
 
-	post.File = s3.FileType{
+	post.File = domain.UploadFile{
 		File:    file,
 		Handler: handler,
 		Exist:   true,
@@ -99,7 +98,13 @@ func (h *Handler) CreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := h.postService.CreatePost(r, post)
+	userID, ok := r.Context().Value("user").(int)
+	if !ok {
+		h.serverError(w, r, fmt.Errorf("user is missing from request context"))
+		return
+	}
+
+	id, err := h.postService.CreatePost(userID, post)
 	if err != nil {
 		h.logger.Error(err.Error(), slog.String("uri", r.URL.RequestURI()), slog.String("method", r.Method))
 		h.serverError(w, r, err)
@@ -204,10 +209,9 @@ func (h *Handler) CreateComment(w http.ResponseWriter, r *http.Request) {
 		com.ParentID = nil
 	}
 
-	fmt.Println(com.ParentID)
 	file, handler, err := r.FormFile("file")
 
-	com.CommentFile = s3.FileType{
+	com.CommentFile = domain.UploadFile{
 		File:    file,
 		Handler: handler,
 		Exist:   true,
@@ -224,7 +228,13 @@ func (h *Handler) CreateComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.commentService.AddComment(r, com)
+	userID, ok := r.Context().Value("user").(int)
+	if !ok {
+		h.serverError(w, r, fmt.Errorf("user is missing from request context"))
+		return
+	}
+
+	err = h.commentService.AddComment(userID, com)
 	if err == appErrors.ErrPostNotAvailable {
 		data := h.NewTemplateData(r)
 		data.ErrID = 403

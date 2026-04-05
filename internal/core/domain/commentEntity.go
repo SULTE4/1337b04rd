@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"1337b04rd/internal/adapters/s3"
 	"time"
 )
 
@@ -23,7 +22,7 @@ type CreateCommentForm struct {
 	ParentID    *int
 	Name        string
 	Comment     string
-	CommentFile s3.FileType
+	CommentFile UploadFile
 }
 
 func NewComment(usID, postID int, parentID *int, content, imageurl string) Comment {

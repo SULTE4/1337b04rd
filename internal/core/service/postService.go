@@ -6,7 +6,6 @@ import (
 	"1337b04rd/internal/core/ports"
 	"1337b04rd/internal/core/util"
 	"fmt"
-	"net/http"
 	"time"
 )
 
@@ -20,13 +19,11 @@ func NewPostService(repo ports.PostRepository, userR ports.UserRepository, s3 po
 	return &PostService{repo: repo, userR: userR, s3: s3}
 }
 
-func (s *PostService) CreatePost(r *http.Request, p domain.CreatePostForm) (int, error) {
+func (s *PostService) CreatePost(userID int, p domain.CreatePostForm) (int, error) {
 	imageUrl, err := s.s3.UploadObject(true, p.File) // true if it is post image or not
 	if err != nil {
 		return 0, err
 	}
-
-	userid := r.Context().Value("user").(int)
 
 	if util.MaxChars(p.Subject, 50) {
 		return 0, appError.ErrTitleOutOfRange
@@ -41,7 +38,7 @@ func (s *PostService) CreatePost(r *http.Request, p domain.CreatePostForm) (int,
 		return 0, appError.ErrContentOutOfRange
 	}
 
-	post := domain.NewPost(p.Subject, p.Comment, imageUrl, p.Name, userid)
+	post := domain.NewPost(p.Subject, p.Comment, imageUrl, p.Name, userID)
 
 	id, err := s.repo.Insert(*post)
 	if err != nil {

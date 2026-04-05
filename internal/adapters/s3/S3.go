@@ -2,11 +2,11 @@ package s3
 
 import (
 	"1337b04rd/internal/appError"
+	"1337b04rd/internal/core/domain"
 	"errors"
 	"fmt"
 	"io"
 	"log/slog"
-	"mime/multipart"
 	"os"
 	"path/filepath"
 	"strings"
@@ -14,15 +14,7 @@ import (
 
 type S3Repo struct{}
 
-func NewS3Repo() (*S3Repo, error) {
-	return &S3Repo{}, initS3()
-}
-
-type FileType struct {
-	File    multipart.File
-	Handler *multipart.FileHeader
-	Exist   bool
-}
+func NewS3Repo() (*S3Repo, error) { return &S3Repo{}, initS3() }
 
 var (
 	directoryPath = "./s3_storage"
@@ -47,7 +39,7 @@ func initS3() error {
 	return nil
 }
 
-func validateFile(f FileType) error {
+func validateFile(f domain.UploadFile) error {
 	if !f.Exist {
 		return errors.New("no file uploaded")
 	}
@@ -72,7 +64,7 @@ func validateFile(f FileType) error {
 	return nil
 }
 
-func (r *S3Repo) UploadObject(isPostImg bool, f FileType) (string, error) {
+func (r *S3Repo) UploadObject(isPostImg bool, f domain.UploadFile) (string, error) {
 	if !f.Exist {
 		return "", nil
 	}

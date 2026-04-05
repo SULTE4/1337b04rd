@@ -1,14 +1,11 @@
 package main
 
 import (
-	"1337b04rd/internal/adapters/s3"
 	"1337b04rd/internal/app"
 	"1337b04rd/internal/core/domain"
 	"1337b04rd/internal/core/service"
-	"context"
 	"database/sql"
 	"log/slog"
-	"net/http"
 	"os"
 	"testing"
 	"time"
@@ -57,20 +54,15 @@ func TestCreateAndGetPost(t *testing.T) {
 		t.Fatalf("failed to create user: %v", err)
 	}
 
-	// Prepare HTTP request with context
-	req := &http.Request{}
-	ctx := context.WithValue(req.Context(), "user", userID)
-	req = req.WithContext(ctx)
-
 	// Create post form
 	form := domain.CreatePostForm{
 		Subject: "Test Post",
 		Comment: "This is a post content",
 		Name:    "Test Author",
-		File:    s3.FileType{Exist: false},
+		File:    domain.UploadFile{Exist: false},
 	}
 
-	postID, err := service.CreatePost(req, form)
+	postID, err := service.CreatePost(userID, form)
 	if err != nil {
 		t.Fatalf("CreatePost failed: %v", err)
 	}

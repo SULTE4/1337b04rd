@@ -4,7 +4,6 @@ import (
 	"1337b04rd/internal/core/domain"
 	"1337b04rd/internal/core/ports"
 	"1337b04rd/internal/core/util"
-	"net/http"
 	"os"
 	"time"
 )
@@ -18,11 +17,7 @@ func NewUserService(repo ports.UserRepository, ex ports.ExternalApi) *UserServic
 	return &UserService{repo: repo, externalApi: ex}
 }
 
-func (s *UserService) NewUser(r *http.Request) (string, *util.Claims, error) {
-	if err := r.ParseForm(); err != nil {
-		return "", nil, err
-	}
-
+func (s *UserService) NewUser(name string) (string, *util.Claims, error) {
 	occupied, err := s.repo.GetOccupiedCharacters()
 	if err != nil {
 		return "", nil, err
@@ -33,7 +28,7 @@ func (s *UserService) NewUser(r *http.Request) (string, *util.Claims, error) {
 		return "", nil, err
 	}
 
-	if name := r.PostForm.Get("name"); name != "" {
+	if name != "" {
 		user.Name = name
 	}
 

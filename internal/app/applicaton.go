@@ -4,6 +4,7 @@ import (
 	"1337b04rd/internal/adapters/external"
 	"1337b04rd/internal/adapters/interface/router"
 	"1337b04rd/internal/adapters/s3"
+	"1337b04rd/internal/core/ports"
 	"1337b04rd/internal/core/service"
 	"database/sql"
 	"log/slog"
@@ -18,6 +19,12 @@ type Application struct {
 	Store  *Store
 	Logger *slog.Logger
 	Router *http.Handler
+}
+
+type Services struct {
+	Post    ports.PostService
+	Comment ports.CommentService
+	User    ports.UserService
 }
 
 func NewApplication(dsn string, logger slog.Logger) (*Application, error) {
@@ -56,9 +63,14 @@ func NewApplication(dsn string, logger slog.Logger) (*Application, error) {
 	postService := service.NewPostService(store.PostRepo, store.UserRepo, s3Storage)
 	commentService := service.NewCommentService(store.CommentRepo, store.UserRepo, s3Storage)
 	userService := service.NewUserService(store.UserRepo, externalApi)
+	services := Services{
+		Post:    postService,
+		Comment: commentService,
+		User:    userService,
+	}
 
 	// Init Handlers
-	handler := ihttp.NewHandler(postService, commentService, userService, templateCache, &logger)
+	handler := ihttp.NewHandler(services.Post, services.Comment, services.User, templateCache, &logger)
 	router := router.NewRouter(handler)
 
 	return &Application{

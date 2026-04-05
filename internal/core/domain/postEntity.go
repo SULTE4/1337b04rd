@@ -1,7 +1,6 @@
 package domain
 
 import (
-	"1337b04rd/internal/adapters/s3"
 	"time"
 )
 
@@ -21,7 +20,7 @@ type CreatePostForm struct {
 	Name    string
 	Subject string
 	Comment string
-	File    s3.FileType
+	File    UploadFile
 }
 
 func NewPost(title, content, imageURL, username string, userid int) *Post {

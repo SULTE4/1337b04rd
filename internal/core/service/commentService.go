@@ -5,7 +5,6 @@ import (
 	"1337b04rd/internal/core/domain"
 	"1337b04rd/internal/core/ports"
 	"1337b04rd/internal/core/util"
-	"net/http"
 )
 
 type CommentService struct {
@@ -18,7 +17,7 @@ func NewCommentService(repo ports.CommentRepository, userR ports.UserRepository,
 	return &CommentService{repo: repo, userR: userR, s3: s3}
 }
 
-func (c *CommentService) AddComment(r *http.Request, com domain.CreateCommentForm) error {
+func (c *CommentService) AddComment(userID int, com domain.CreateCommentForm) error {
 	if util.MinChars(com.Comment, 1) {
 		return appError.ErrContentShouldNotBeEmpty
 	}
@@ -39,9 +38,7 @@ func (c *CommentService) AddComment(r *http.Request, com domain.CreateCommentFor
 		return err
 	}
 
-	userid := r.Context().Value("user").(int)
-
-	comment := domain.NewComment(userid, com.PostID, com.ParentID, com.Comment, imageUrl)
+	comment := domain.NewComment(userID, com.PostID, com.ParentID, com.Comment, imageUrl)
 
 	if err := c.repo.Insert(comment); err != nil {
 		return err

@@ -3,7 +3,6 @@ package http
 import (
 	"1337b04rd/internal/core/util"
 	"context"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"time"
@@ -29,7 +28,7 @@ func (h *Handler) TokenMiddleware(next http.Handler) http.Handler {
 		var claims *util.Claims
 
 		if err != nil { // no token → new user
-			token, newClaims, err := h.userService.NewUser(r)
+			token, newClaims, err := h.userService.NewUser(r.FormValue("name"))
 			if err != nil {
 				h.logger.Error(err.Error())
 				h.serverError(w, r, err)
@@ -41,7 +40,7 @@ func (h *Handler) TokenMiddleware(next http.Handler) http.Handler {
 			claims, err = util.VerifyJWT(cookie.Value, "supersecrethahaha")
 			if err != nil {
 				// invalid/expired → new token
-				token, newClaims, err := h.userService.NewUser(r)
+				token, newClaims, err := h.userService.NewUser(r.FormValue("name"))
 				if err != nil {
 					h.logger.Error(err.Error())
 					h.serverError(w, r, err)
@@ -53,12 +52,11 @@ func (h *Handler) TokenMiddleware(next http.Handler) http.Handler {
 				exists, err := h.userService.Exists(claims.UserID)
 				if err != nil {
 					h.logger.Error(err.Error())
-					fmt.Print(1)
 					h.serverError(w, r, err)
 					return
 				}
 				if !exists {
-					token, newClaims, err := h.userService.NewUser(r)
+					token, newClaims, err := h.userService.NewUser(r.FormValue("name"))
 					if err != nil {
 						h.logger.Error(err.Error())
 						h.serverError(w, r, err)
@@ -114,7 +112,6 @@ func (h *Handler) TokenMiddleware(next http.Handler) http.Handler {
 			}
 		}
 		// attach claims to request context so handlers can use them
-		fmt.Println(claims)
 		ctx := context.WithValue(r.Context(), "user", claims.UserID)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})

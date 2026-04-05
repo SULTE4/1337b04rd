@@ -1,14 +1,11 @@
 package main
 
 import (
-	"1337b04rd/internal/adapters/s3"
 	"1337b04rd/internal/app"
 	"1337b04rd/internal/core/domain"
 	"1337b04rd/internal/core/service"
-	"context"
 	"database/sql"
 	"log/slog"
-	"net/http"
 	"os"
 	"testing"
 	"time"
@@ -72,20 +69,15 @@ func TestAddCommentAndGetComments(t *testing.T) {
 		t.Fatalf("failed to create test post: %v", err)
 	}
 
-	// Create HTTP request with context containing user ID
-	req := &http.Request{}
-	ctx := context.WithValue(req.Context(), "user", userID)
-	req = req.WithContext(ctx)
-
 	// Add comment
 	commentForm := domain.CreateCommentForm{
 		PostID:      postID,
 		Comment:     "Test Comment",
 		ParentID:    nil,
-		CommentFile: s3.FileType{Exist: false},
+		CommentFile: domain.UploadFile{Exist: false},
 	}
 
-	err = service.AddComment(req, commentForm)
+	err = service.AddComment(userID, commentForm)
 	if err != nil {
 		t.Fatalf("AddComment failed: %v", err)
 	}
@@ -107,9 +99,9 @@ func TestAddCommentAndGetComments(t *testing.T) {
 		PostID:      postID,
 		Comment:     "Reply Comment",
 		ParentID:    &comments[0].CommentID,
-		CommentFile: s3.FileType{Exist: false},
+		CommentFile: domain.UploadFile{Exist: false},
 	}
-	err = service.AddComment(req, replyForm)
+	err = service.AddComment(userID, replyForm)
 	if err != nil {
 		t.Fatalf("AddComment reply failed: %v", err)
 	}
