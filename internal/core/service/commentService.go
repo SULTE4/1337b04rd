@@ -13,7 +13,7 @@ type CommentService struct {
 	s3    ports.S3Repository
 }
 
-func NewCommentService(repo ports.CommentRepository, userR ports.UserRepository, s3 ports.S3Repository) *CommentService {
+func NewCommentService(repo ports.CommentRepository, userR ports.UserRepository, s3 ports.S3Repository) ports.CommentService {
 	return &CommentService{repo: repo, userR: userR, s3: s3}
 }
 

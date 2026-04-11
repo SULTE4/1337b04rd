@@ -1,8 +1,6 @@
 package s3
 
 import (
-	"1337b04rd/internal/appError"
-	"1337b04rd/internal/core/domain"
 	"errors"
 	"fmt"
 	"io"
@@ -10,11 +8,15 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"1337b04rd/internal/appError"
+	"1337b04rd/internal/core/domain"
+	"1337b04rd/internal/core/ports"
 )
 
 type S3Repo struct{}
 
-func NewS3Repo() (*S3Repo, error) { return &S3Repo{}, initS3() }
+func NewS3Repo() (ports.S3Repository, error) { return &S3Repo{}, initS3() }
 
 var (
 	directoryPath = "./s3_storage"

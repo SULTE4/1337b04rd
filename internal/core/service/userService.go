@@ -1,11 +1,12 @@
 package service
 
 import (
+	"os"
+	"time"
+
 	"1337b04rd/internal/core/domain"
 	"1337b04rd/internal/core/ports"
 	"1337b04rd/internal/core/util"
-	"os"
-	"time"
 )
 
 type UserService struct {
@@ -13,7 +14,7 @@ type UserService struct {
 	externalApi ports.ExternalApi
 }
 
-func NewUserService(repo ports.UserRepository, ex ports.ExternalApi) *UserService {
+func NewUserService(repo ports.UserRepository, ex ports.ExternalApi) ports.UserService {
 	return &UserService{repo: repo, externalApi: ex}
 }
 

@@ -1,15 +1,16 @@
 package app
 
 import (
+	"database/sql"
+	"log/slog"
+	"net/http"
+	"os"
+
 	"1337b04rd/internal/adapters/external"
 	"1337b04rd/internal/adapters/interface/router"
 	"1337b04rd/internal/adapters/s3"
 	"1337b04rd/internal/core/ports"
 	"1337b04rd/internal/core/service"
-	"database/sql"
-	"log/slog"
-	"net/http"
-	"os"
 
 	ihttp "1337b04rd/internal/adapters/interface/http"
 )
@@ -49,7 +50,7 @@ func NewApplication(dsn string, logger slog.Logger) (*Application, error) {
 	// Init Store (adapters)
 	store := NewStore(db, &logger)
 
-	// S3 storage init
+	// S3 storage with init
 	s3Storage, err := s3.NewS3Repo()
 	if err != nil {
 		logger.Error(err.Error())

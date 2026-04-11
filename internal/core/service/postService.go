@@ -1,12 +1,13 @@
 package service
 
 import (
+	"fmt"
+	"time"
+
 	"1337b04rd/internal/appError"
 	"1337b04rd/internal/core/domain"
 	"1337b04rd/internal/core/ports"
 	"1337b04rd/internal/core/util"
-	"fmt"
-	"time"
 )
 
 type PostService struct {
@@ -15,7 +16,7 @@ type PostService struct {
 	s3    ports.S3Repository
 }
 
-func NewPostService(repo ports.PostRepository, userR ports.UserRepository, s3 ports.S3Repository) *PostService {
+func NewPostService(repo ports.PostRepository, userR ports.UserRepository, s3 ports.S3Repository) ports.PostService {
 	return &PostService{repo: repo, userR: userR, s3: s3}
 }
 
